@@ -1,0 +1,162 @@
+<?php
+
+namespace Tests\Feature\Feature\Garage;
+
+use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
+
+class AdminUserCrudTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_admin_can_create_user(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $response = $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'Created User',
+            'email' => 'created-user@garage.test',
+            'phone' => '1234567890',
+            'role' => 'mechanic',
+            'password' => 'password123',
+            'is_active' => true,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('users', [
+            'email' => 'created-user@garage.test',
+            'name' => 'Created User',
+        ]);
+
+        $created = User::query()->where('email', 'created-user@garage.test')->firstOrFail();
+        $this->assertTrue($created->hasRole('mechanic'));
+    }
+
+    public function test_admin_can_update_user(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $target = User::factory()->create([
+            'name' => 'Before Name',
+            'email' => 'before@garage.test',
+        ]);
+        $target->assignRole('client');
+
+        $response = $this->actingAs($admin)->put(route('admin.users.update', $target), [
+            'name' => 'After Name',
+            'email' => 'after@garage.test',
+            'phone' => '9999999999',
+            'role' => 'mechanic',
+            'password' => '',
+            'is_active' => false,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('users', [
+            'id' => $target->id,
+            'name' => 'After Name',
+            'email' => 'after@garage.test',
+            'is_active' => false,
+        ]);
+        $this->assertTrue($target->fresh()->hasRole('mechanic'));
+    }
+
+    public function test_admin_can_delete_another_user_but_not_self(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $target = User::factory()->create();
+        $target->assignRole('client');
+
+        $deleteTargetResponse = $this->actingAs($admin)->delete(route('admin.users.destroy', $target));
+        $deleteTargetResponse->assertRedirect();
+        $this->assertDatabaseMissing('users', ['id' => $target->id]);
+
+        $deleteSelfResponse = $this->actingAs($admin)->delete(route('admin.users.destroy', $admin));
+        $deleteSelfResponse->assertRedirect();
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
+        $deleteSelfResponse->assertSessionHas('error', 'You cannot delete your own account.');
+    }
+
+    public function test_non_admin_cannot_manage_users(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $mechanic = User::factory()->create();
+        $mechanic->assignRole('mechanic');
+
+        $response = $this->actingAs($mechanic)->post(route('admin.users.store'), [
+            'name' => 'Nope',
+            'email' => 'nope@garage.test',
+            'role' => 'client',
+            'password' => 'password123',
+        ]);
+
+        $response->assertForbidden();
+    }
+
+    public function test_admin_can_filter_users_by_role_and_search(): void
+    {
+        $this->withoutVite();
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $mechanic = User::factory()->create([
+            'name' => 'Target Mechanic',
+            'email' => 'target-mechanic@garage.test',
+        ]);
+        $mechanic->assignRole('mechanic');
+
+        $client = User::factory()->create([
+            'name' => 'Target Client',
+            'email' => 'target-client@garage.test',
+        ]);
+        $client->assignRole('client');
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index', [
+            'role' => 'mechanic',
+            'search' => 'target-mechanic',
+        ]));
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/UserManagement')
+                ->where('filters.role', 'mechanic')
+                ->where('filters.search', 'target-mechanic')
+                ->where('users.data.0.email', 'target-mechanic@garage.test')
+                ->missing('users.data.1')
+            );
+    }
+
+    public function test_admin_users_list_is_paginated(): void
+    {
+        $this->withoutVite();
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        User::factory()->count(15)->create()->each(function (User $user): void {
+            $user->assignRole('client');
+        });
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index', ['page' => 2]));
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/UserManagement')
+                ->where('users.current_page', 2)
+                ->has('users.data')
+            );
+    }
+}

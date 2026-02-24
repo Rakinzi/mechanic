@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Http\Controllers\Mechanic;
+
+use App\Http\Controllers\Controller;
+use App\Models\JobStage;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class AssignedStageController extends Controller
+{
+    public function index(): Response
+    {
+        return Inertia::render('mechanic/AssignedStages', [
+            'stages' => JobStage::query()
+                ->with(['jobCard.vehicle.client', 'stage', 'delayReports'])
+                ->where('assigned_mechanic_id', request()->user()->id)
+                ->orderByRaw('CASE WHEN due_at IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('due_at')
+                ->get(),
+        ]);
+    }
+
+    public function show(JobStage $jobStage): Response
+    {
+        $this->authorize('view', $jobStage);
+
+        return Inertia::render('mechanic/StageExecution', [
+            'jobStage' => $jobStage->load([
+                'jobCard.vehicle.client',
+                'stage',
+                'logs.actor',
+                'delayReports.submitter',
+                'delayReports.reviewer',
+                'media',
+            ]),
+        ]);
+    }
+}

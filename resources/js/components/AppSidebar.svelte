@@ -1,8 +1,12 @@
 <script lang="ts">
-    import { Link } from '@inertiajs/svelte';
-    import BookOpen from 'lucide-svelte/icons/book-open';
-    import Folder from 'lucide-svelte/icons/folder';
+    import { Link, page } from '@inertiajs/svelte';
     import LayoutGrid from 'lucide-svelte/icons/layout-grid';
+    import ClipboardList from 'lucide-svelte/icons/clipboard-list';
+    import Gauge from 'lucide-svelte/icons/gauge';
+    import Settings2 from 'lucide-svelte/icons/settings-2';
+    import Users from 'lucide-svelte/icons/users';
+    import Wrench from 'lucide-svelte/icons/wrench';
+    import Car from 'lucide-svelte/icons/car';
     import type { Snippet } from 'svelte';
     import AppLogo from '@/components/AppLogo.svelte';
     import NavFooter from '@/components/NavFooter.svelte';
@@ -20,6 +24,14 @@
     import { toUrl } from '@/lib/utils';
     import type { NavItem } from '@/types';
     import { dashboard } from '@/routes';
+    import { dashboard as adminDashboard } from '@/routes/admin';
+    import { index as adminJobCards } from '@/routes/admin/job-cards';
+    import { index as adminStages } from '@/routes/admin/stages';
+    import { index as adminUsers } from '@/routes/admin/users';
+    import { index as adminReports } from '@/routes/admin/reports';
+    import { index as mechanicAssignedStages } from '@/routes/mechanic/assigned-stages';
+    import { index as clientVehicles } from '@/routes/client/vehicles';
+    import { index as clientRepairs } from '@/routes/client/repairs';
 
     let {
         children,
@@ -27,26 +39,31 @@
         children?: Snippet;
     } = $props();
 
-    const mainNavItems: NavItem[] = [
-        {
-            title: 'Dashboard',
-            href: dashboard(),
-            icon: LayoutGrid,
-        },
-    ];
+    const auth = $derived($page.props.auth as { user?: { roles?: string[] } | null });
+    const userRoles = $derived((auth?.user?.roles ?? []) as string[]);
 
-    const footerNavItems: NavItem[] = [
-        {
-            title: 'Github Repo',
-            href: 'https://github.com/laravel/svelte-starter-kit',
-            icon: Folder,
-        },
-        {
-            title: 'Documentation',
-            href: 'https://laravel.com/docs/starter-kits#svelte',
-            icon: BookOpen,
-        },
-    ];
+    const mainNavItems = $derived(
+        userRoles.includes('admin')
+            ? [
+                { title: 'Dashboard', href: adminDashboard(), icon: Gauge },
+                { title: 'Job Cards', href: adminJobCards(), icon: ClipboardList },
+                { title: 'Stages', href: adminStages(), icon: Settings2 },
+                { title: 'Users', href: adminUsers(), icon: Users },
+                { title: 'Reports', href: adminReports(), icon: LayoutGrid },
+            ]
+            : userRoles.includes('mechanic')
+              ? [
+                    { title: 'Dashboard', href: dashboard(), icon: Gauge },
+                    { title: 'My Stages', href: mechanicAssignedStages(), icon: Wrench },
+                ]
+              : [
+                    { title: 'Dashboard', href: dashboard(), icon: Gauge },
+                    { title: 'My Vehicles', href: clientVehicles(), icon: Car },
+                    { title: 'My Repairs', href: clientRepairs(), icon: ClipboardList },
+                ],
+    );
+
+    const footerNavItems: NavItem[] = [];
 </script>
 
 <Sidebar collapsible="icon" variant="inset">

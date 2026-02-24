@@ -1,4 +1,5 @@
 <script lang="ts">
+    import AppFlashToasts from '@/components/AppFlashToasts.svelte';
     import type { Snippet } from 'svelte';
     import AppContent from '@/components/AppContent.svelte';
     import AppShell from '@/components/AppShell.svelte';
@@ -21,4 +22,5 @@
         <AppSidebarHeader {breadcrumbs} />
         {@render children?.()}
     </AppContent>
+    <AppFlashToasts />
 </AppShell>
