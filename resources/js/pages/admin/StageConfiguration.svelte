@@ -2,8 +2,8 @@
     import { Form } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import AdminLayout from '@/layouts/AdminLayout.svelte';
-    import type { BreadcrumbItem } from '@/types';
     import { store, update } from '@/routes/admin/stages';
+    import type { BreadcrumbItem } from '@/types';
 
     let { stages }: { stages: any[] } = $props();
 

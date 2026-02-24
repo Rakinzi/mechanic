@@ -3,8 +3,8 @@
     import { Accordion } from '@skeletonlabs/skeleton-svelte';
     import AppHead from '@/components/AppHead.svelte';
     import AdminLayout from '@/layouts/AdminLayout.svelte';
-    import type { BreadcrumbItem } from '@/types';
     import { index as usersIndex } from '@/routes/admin/users';
+    import type { BreadcrumbItem } from '@/types';
 
     let {
         users,
@@ -27,6 +27,17 @@
     } = $props();
 
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'User Management', href: '/admin/users' }];
+
+    const formatPaginationLabel = (label: string): string => {
+        return label
+            .replace(/<[^>]*>/g, '')
+            .replace(/&laquo;/g, '«')
+            .replace(/&raquo;/g, '»')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'")
+            .trim();
+    };
 </script>
 
 <AppHead title="User Management" />
@@ -161,10 +172,12 @@
                         href={link.url}
                         class={`rounded-md border px-3 py-1 text-sm ${link.active ? 'bg-primary text-primary-foreground' : ''}`}
                     >
-                        {@html link.label}
+                        {formatPaginationLabel(link.label)}
                     </a>
                 {:else}
-                    <span class="rounded-md border px-3 py-1 text-sm text-muted-foreground">{@html link.label}</span>
+                    <span class="rounded-md border px-3 py-1 text-sm text-muted-foreground">
+                        {formatPaginationLabel(link.label)}
+                    </span>
                 {/if}
             {/each}
         </div>

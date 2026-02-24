@@ -1,8 +1,8 @@
 <script lang="ts">
     import type { Snippet } from 'svelte';
     import AppLayout from '@/layouts/AppLayout.svelte';
-    import type { BreadcrumbItem } from '@/types';
     import { index as assignedStages } from '@/routes/mechanic/assigned-stages';
+    import type { BreadcrumbItem } from '@/types';
 
     let {
         breadcrumbs = [],

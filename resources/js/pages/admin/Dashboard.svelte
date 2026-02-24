@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { onDestroy, onMount } from 'svelte';
     import { router } from '@inertiajs/svelte';
     import { Accordion } from '@skeletonlabs/skeleton-svelte';
+    import { onDestroy, onMount } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import StageCard from '@/components/StageCard.svelte';
     import AdminLayout from '@/layouts/AdminLayout.svelte';

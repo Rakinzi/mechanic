@@ -1,7 +1,7 @@
 <script lang="ts">
-    import AppFlashToasts from '@/components/AppFlashToasts.svelte';
     import type { Snippet } from 'svelte';
     import AppContent from '@/components/AppContent.svelte';
+    import AppFlashToasts from '@/components/AppFlashToasts.svelte';
     import AppShell from '@/components/AppShell.svelte';
     import AppSidebar from '@/components/AppSidebar.svelte';
     import AppSidebarHeader from '@/components/AppSidebarHeader.svelte';

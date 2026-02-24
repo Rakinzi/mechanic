@@ -1,12 +1,12 @@
 <script lang="ts">
     import { Link, page } from '@inertiajs/svelte';
-    import LayoutGrid from 'lucide-svelte/icons/layout-grid';
+    import Car from 'lucide-svelte/icons/car';
     import ClipboardList from 'lucide-svelte/icons/clipboard-list';
     import Gauge from 'lucide-svelte/icons/gauge';
+    import LayoutGrid from 'lucide-svelte/icons/layout-grid';
     import Settings2 from 'lucide-svelte/icons/settings-2';
     import Users from 'lucide-svelte/icons/users';
     import Wrench from 'lucide-svelte/icons/wrench';
-    import Car from 'lucide-svelte/icons/car';
     import type { Snippet } from 'svelte';
     import AppLogo from '@/components/AppLogo.svelte';
     import NavFooter from '@/components/NavFooter.svelte';
@@ -22,16 +22,16 @@
         SidebarMenuItem,
     } from '@/components/ui/sidebar';
     import { toUrl } from '@/lib/utils';
-    import type { NavItem } from '@/types';
     import { dashboard } from '@/routes';
     import { dashboard as adminDashboard } from '@/routes/admin';
     import { index as adminJobCards } from '@/routes/admin/job-cards';
+    import { index as adminReports } from '@/routes/admin/reports';
     import { index as adminStages } from '@/routes/admin/stages';
     import { index as adminUsers } from '@/routes/admin/users';
-    import { index as adminReports } from '@/routes/admin/reports';
-    import { index as mechanicAssignedStages } from '@/routes/mechanic/assigned-stages';
-    import { index as clientVehicles } from '@/routes/client/vehicles';
     import { index as clientRepairs } from '@/routes/client/repairs';
+    import { index as clientVehicles } from '@/routes/client/vehicles';
+    import { index as mechanicAssignedStages } from '@/routes/mechanic/assigned-stages';
+    import type { NavItem } from '@/types';
 
     let {
         children,

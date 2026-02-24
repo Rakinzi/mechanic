@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { onDestroy, onMount } from 'svelte';
     import { router } from '@inertiajs/svelte';
     import { Accordion } from '@skeletonlabs/skeleton-svelte';
+    import { onDestroy, onMount } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
     import MechanicLayout from '@/layouts/MechanicLayout.svelte';
-    import type { BreadcrumbItem } from '@/types';
     import { show } from '@/routes/mechanic/assigned-stages';
+    import type { BreadcrumbItem } from '@/types';
 
     let { stages }: { stages: any[] } = $props();
 

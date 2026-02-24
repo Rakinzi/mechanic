@@ -3,8 +3,8 @@
     import { Accordion } from '@skeletonlabs/skeleton-svelte';
     import AppHead from '@/components/AppHead.svelte';
     import AdminLayout from '@/layouts/AdminLayout.svelte';
-    import type { BreadcrumbItem } from '@/types';
     import { index, store } from '@/routes/admin/job-cards';
+    import type { BreadcrumbItem } from '@/types';
 
     let {
         jobCards,

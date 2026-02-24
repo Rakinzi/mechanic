@@ -1,9 +1,9 @@
 <script lang="ts">
     import type { Snippet } from 'svelte';
     import AppLayout from '@/layouts/AppLayout.svelte';
-    import type { BreadcrumbItem } from '@/types';
-    import { index as vehiclesIndex } from '@/routes/client/vehicles';
     import { index as repairsIndex } from '@/routes/client/repairs';
+    import { index as vehiclesIndex } from '@/routes/client/vehicles';
+    import type { BreadcrumbItem } from '@/types';
 
     let {
         breadcrumbs = [],

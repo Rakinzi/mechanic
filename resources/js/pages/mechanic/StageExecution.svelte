@@ -6,8 +6,8 @@
     import PhotoGallery from '@/components/PhotoGallery.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
     import MechanicLayout from '@/layouts/MechanicLayout.svelte';
-    import type { BreadcrumbItem } from '@/types';
     import { block, complete, pause, start } from '@/routes/mechanic/job-stages';
+    import type { BreadcrumbItem } from '@/types';
 
     let { jobStage }: { jobStage: any } = $props();
 
