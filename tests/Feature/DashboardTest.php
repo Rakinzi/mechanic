@@ -49,4 +49,14 @@ class DashboardTest extends TestCase
         $response = $this->get(route('dashboard'));
         $response->assertRedirect(route('client.repairs.index'));
     }
+
+    public function test_users_without_a_role_are_forbidden_from_dashboard_redirect(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $response = $this->get(route('dashboard'));
+
+        $response->assertForbidden();
+    }
 }

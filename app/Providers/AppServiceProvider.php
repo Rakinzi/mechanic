@@ -25,13 +25,42 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * @var array<string, list<string>>
+     */
+    private const ROLE_PERMISSIONS = [
+        'admin' => [
+            'view admin dashboard',
+            'manage stages',
+            'manage users',
+            'manage job cards',
+            'review delay reports',
+            'view reports',
+            'view assigned stages',
+            'run stage actions',
+            'submit delay reports',
+            'view own repairs',
+        ],
+        'mechanic' => [
+            'view assigned stages',
+            'run stage actions',
+            'submit delay reports',
+        ],
+        'client' => [
+            'view own repairs',
+        ],
+    ];
+
     /**
      * Register any application services.
      */
@@ -73,6 +102,7 @@ class AppServiceProvider extends ServiceProvider
 
         app()[\Spatie\Permission\PermissionRegistrar::class]->setPermissionClass(Permission::class);
         app()[\Spatie\Permission\PermissionRegistrar::class]->setRoleClass(Role::class);
+        $this->ensureAuthorizationDefaults();
     }
 
     protected function registerPolicies(): void
@@ -90,5 +120,28 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(DelayReportSubmitted::class, LogDelayReportSubmitted::class);
         Event::listen(DelayReportReviewed::class, LogDelayReportReviewed::class);
         Event::listen(StageCompleted::class, LogStageCompleted::class);
+    }
+
+    protected function ensureAuthorizationDefaults(): void
+    {
+        try {
+            if (! Schema::hasTable('roles') || ! Schema::hasTable('permissions') || ! Schema::hasTable('role_has_permissions')) {
+                return;
+            }
+
+            foreach (self::ROLE_PERMISSIONS as $roleName => $permissions) {
+                $role = Role::findOrCreate($roleName, 'web');
+
+                foreach ($permissions as $permissionName) {
+                    Permission::findOrCreate($permissionName, 'web');
+                }
+
+                $role->givePermissionTo($permissions);
+            }
+
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        } catch (Throwable) {
+            return;
+        }
     }
 }

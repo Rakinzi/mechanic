@@ -8,8 +8,10 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
@@ -60,16 +62,19 @@ class UserManagementController extends Controller
 
         $data = $request->validated();
 
-        $user = User::query()->create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'] ?? null,
-            'password' => $data['password'],
-            'email_verified_at' => now(),
-            'is_active' => (bool) ($data['is_active'] ?? false),
-        ]);
+        DB::transaction(function () use ($data): void {
+            $user = User::query()->create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'password' => $data['password'],
+                'email_verified_at' => now(),
+                'is_active' => (bool) ($data['is_active'] ?? false),
+            ]);
 
-        $user->syncRoles([$data['role']]);
+            $role = Role::findOrCreate($data['role'], config('auth.defaults.guard', 'web'));
+            $user->syncRoles([$role]);
+        });
 
         return back()->with('success', 'User created successfully.');
     }
@@ -91,8 +96,11 @@ class UserManagementController extends Controller
             $payload['password'] = $data['password'];
         }
 
-        $user->update($payload);
-        $user->syncRoles([$data['role']]);
+        DB::transaction(function () use ($user, $payload, $data): void {
+            $user->update($payload);
+            $role = Role::findOrCreate($data['role'], config('auth.defaults.guard', 'web'));
+            $user->syncRoles([$role]);
+        });
 
         return back()->with('success', 'User updated successfully.');
     }
