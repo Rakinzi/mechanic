@@ -75,8 +75,8 @@ class JobCardSummaryDownloadTest extends TestCase
             'created_by' => $admin->id,
         ]);
 
-        Stage::factory()->create(['sequence' => 1, 'name' => 'Inspection']);
-        Stage::factory()->create(['sequence' => 2, 'name' => 'Assembly']);
+        Stage::query()->where('name', 'Panel Beating')->firstOrFail();
+        Stage::query()->where('name', 'Mechanics')->firstOrFail();
 
         return [$admin, $jobCard];
     }

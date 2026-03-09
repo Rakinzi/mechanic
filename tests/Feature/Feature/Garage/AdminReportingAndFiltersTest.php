@@ -62,7 +62,7 @@ class AdminReportingAndFiltersTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $stage = Stage::factory()->create(['sequence' => 1, 'name' => 'Inspection']);
+        $stage = Stage::query()->where('name', 'Panel Beating')->firstOrFail();
 
         $overdueJobCard = JobCard::factory()->create([
             'vehicle_id' => Vehicle::factory()->create()->id,
