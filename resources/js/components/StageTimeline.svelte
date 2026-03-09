@@ -8,6 +8,9 @@
         name: string;
         status: string;
         due_at?: string | null;
+        planned_due_at?: string | null;
+        planned_duration_value?: number | null;
+        planned_duration_unit?: string | null;
         assigned_mechanic?: { name: string } | null;
     };
 
@@ -23,6 +26,8 @@
             </Accordion.ItemTrigger>
             <Accordion.ItemContent class="text-xs text-muted-foreground">
                 <p>Mechanic: {stage.assigned_mechanic?.name ?? 'Unassigned'}</p>
+                <p>Planned time: {stage.planned_duration_value ?? 'N/A'} {stage.planned_duration_unit ?? ''}</p>
+                <p>Planned due: {stage.planned_due_at ? new Date(stage.planned_due_at).toLocaleString() : 'N/A'}</p>
                 <p>Due: {stage.due_at ? new Date(stage.due_at).toLocaleString() : 'N/A'}</p>
             </Accordion.ItemContent>
         </Accordion.Item>

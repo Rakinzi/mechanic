@@ -6,6 +6,24 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class IntakeJobCardRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $selectedStages = collect($this->input('selected_stages', []))
+            ->filter(fn (mixed $stage): bool => filled(data_get($stage, 'enabled')) && filled(data_get($stage, 'stage_id')))
+            ->map(fn (mixed $stage): array => [
+                'stage_id' => (int) data_get($stage, 'stage_id'),
+                'assigned_mechanic_id' => filled(data_get($stage, 'assigned_mechanic_id')) ? (int) data_get($stage, 'assigned_mechanic_id') : null,
+                'planned_duration_value' => (int) data_get($stage, 'planned_duration_value'),
+                'planned_duration_unit' => data_get($stage, 'planned_duration_unit', 'hours'),
+            ])
+            ->values()
+            ->all();
+
+        $this->merge([
+            'selected_stages' => $selectedStages,
+        ]);
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -33,8 +51,11 @@ class IntakeJobCardRequest extends FormRequest
             'customer_complaint' => ['required', 'string'],
             'diagnosis_notes' => ['nullable', 'string'],
             'promised_delivery_at' => ['nullable', 'date', 'after_or_equal:today'],
-            'assigned_mechanics' => ['nullable', 'array'],
-            'assigned_mechanics.*' => ['nullable', 'integer', 'exists:users,id'],
+            'selected_stages' => ['required', 'array', 'min:1'],
+            'selected_stages.*.stage_id' => ['required', 'integer', 'distinct', 'exists:stages,id'],
+            'selected_stages.*.assigned_mechanic_id' => ['nullable', 'integer', 'exists:users,id'],
+            'selected_stages.*.planned_duration_value' => ['required', 'integer', 'min:1', 'max:365'],
+            'selected_stages.*.planned_duration_unit' => ['required', 'in:hours,days'],
         ];
     }
 }

@@ -22,6 +22,7 @@ class JobCard extends Model
         'customer_complaint',
         'diagnosis_notes',
         'status',
+        'current_job_stage_id',
         'received_at',
         'promised_delivery_at',
         'closed_at',
@@ -49,8 +50,18 @@ class JobCard extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function currentJobStage(): BelongsTo
+    {
+        return $this->belongsTo(JobStage::class, 'current_job_stage_id');
+    }
+
     public function jobStages(): HasMany
     {
         return $this->hasMany(JobStage::class)->orderBy('sequence');
+    }
+
+    public function audits(): HasMany
+    {
+        return $this->hasMany(JobCardAudit::class)->orderByDesc('happened_at');
     }
 }

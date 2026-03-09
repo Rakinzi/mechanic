@@ -14,7 +14,7 @@ class RepairController extends Controller
         return Inertia::render('client/MyRepairs', [
             'jobCards' => JobCard::query()
                 ->whereHas('vehicle.client', fn ($query) => $query->where('user_id', request()->user()->id))
-                ->with(['vehicle', 'jobStages.stage'])
+                ->with(['vehicle', 'currentJobStage.stage', 'jobStages.stage'])
                 ->latest()
                 ->get(),
         ]);
@@ -27,7 +27,10 @@ class RepairController extends Controller
         return Inertia::render('client/RepairProgress', [
             'jobCard' => $jobCard->load([
                 'vehicle',
+                'currentJobStage.stage',
                 'jobStages.stage',
+                'jobStages.assignedMechanic',
+                'jobStages.delayReports',
                 'jobStages.logs.actor',
                 'jobStages.media',
             ]),

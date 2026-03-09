@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\DB;
 
 class DelayReportService
 {
-    public function __construct(protected StageLogService $stageLogService) {}
+    public function __construct(
+        protected StageLogService $stageLogService,
+        protected JobCardAuditService $jobCardAuditService,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $payload
@@ -34,7 +37,9 @@ class DelayReportService
             ]);
 
             $jobStage->update([
-                'status' => StageStatus::Overdue,
+                'status' => $this->shouldMarkOverdue($jobStage) ? StageStatus::Overdue : StageStatus::Blocked,
+                'blocked_at' => now(),
+                'latest_note' => $payload['explanation'],
             ]);
 
             return $delayReport;
@@ -54,7 +59,20 @@ class DelayReportService
             ],
         );
 
-        event(new DelayReportSubmitted($delayReport, $actor));
+        $this->jobCardAuditService->record(
+            $jobStage->jobCard,
+            'DELAY_REPORT_SUBMITTED',
+            sprintf('Delay report submitted for %s.', $jobStage->stage->name),
+            $actor,
+            $jobStage,
+            [
+                'delay_report_id' => $delayReport->id,
+                'reason_category' => $delayReport->reason_category->value,
+                'proposed_eta' => $delayReport->proposed_eta?->toDateTimeString(),
+            ],
+        );
+
+        DB::afterCommit(fn (): mixed => event(new DelayReportSubmitted($delayReport, $actor)));
 
         return $delayReport->fresh(['jobStage', 'submitter']);
     }
@@ -73,6 +91,7 @@ class DelayReportService
         if ($jobStage->due_at !== null && $delayReport->proposed_eta->greaterThan($jobStage->due_at)) {
             $jobStage->update([
                 'due_at' => $delayReport->proposed_eta,
+                'planned_due_at' => $delayReport->proposed_eta,
             ]);
         }
 
@@ -89,7 +108,19 @@ class DelayReportService
             ],
         );
 
-        event(new DelayReportReviewed($delayReport->fresh(), $reviewer));
+        $this->jobCardAuditService->record(
+            $jobStage->jobCard,
+            'DELAY_REPORT_APPROVED',
+            sprintf('Delay report approved for %s.', $jobStage->stage->name),
+            $reviewer,
+            $jobStage,
+            [
+                'delay_report_id' => $delayReport->id,
+                'comment' => $comment,
+            ],
+        );
+
+        DB::afterCommit(fn (): mixed => event(new DelayReportReviewed($delayReport->fresh(), $reviewer)));
 
         return $delayReport->fresh(['jobStage', 'reviewer']);
     }
@@ -116,8 +147,25 @@ class DelayReportService
             ],
         );
 
-        event(new DelayReportReviewed($delayReport->fresh(), $reviewer));
+        $this->jobCardAuditService->record(
+            $delayReport->jobStage->jobCard,
+            'DELAY_REPORT_REJECTED',
+            sprintf('Delay report rejected for %s.', $delayReport->jobStage->stage->name),
+            $reviewer,
+            $delayReport->jobStage,
+            [
+                'delay_report_id' => $delayReport->id,
+                'comment' => $comment,
+            ],
+        );
+
+        DB::afterCommit(fn (): mixed => event(new DelayReportReviewed($delayReport->fresh(), $reviewer)));
 
         return $delayReport->fresh(['jobStage', 'reviewer']);
+    }
+
+    protected function shouldMarkOverdue(JobStage $jobStage): bool
+    {
+        return $jobStage->due_at !== null && now()->greaterThan($jobStage->due_at);
     }
 }

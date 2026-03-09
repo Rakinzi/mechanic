@@ -42,6 +42,7 @@
                     </Accordion.ItemTrigger>
                     <Accordion.ItemContent class="space-y-1 text-sm text-muted-foreground">
                         <p>{jobCard.vehicle.make} {jobCard.vehicle.model}</p>
+                        <p>Current stage: {jobCard.current_job_stage?.stage?.name ?? 'Completed'}</p>
                         <a href={show({ jobCard: jobCard.id }).url} class="underline">View progress</a>
                     </Accordion.ItemContent>
                 </Accordion.Item>

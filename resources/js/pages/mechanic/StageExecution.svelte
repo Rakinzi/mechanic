@@ -19,6 +19,7 @@
     ]);
 
     const isOverdue = $derived(jobStage.status === 'OVERDUE');
+    const isBlocked = $derived(jobStage.status === 'BLOCKED');
     const hasApprovedDelayReport = $derived(
         (jobStage.delay_reports ?? []).some((report: { status: string }) => report.status === 'APPROVED'),
     );
@@ -40,10 +41,16 @@
             <StatusBadge status={jobStage.status} />
         </div>
         <p class="text-sm text-muted-foreground">Job #{jobStage.job_card.job_number}</p>
+        <p class="text-sm text-muted-foreground">Planned due {jobStage.planned_due_at ? new Date(jobStage.planned_due_at).toLocaleString() : 'N/A'}</p>
         <p class="text-sm text-muted-foreground">Due {jobStage.due_at ? new Date(jobStage.due_at).toLocaleString() : 'N/A'}</p>
         {#if isOverdue && !hasApprovedDelayReport}
             <p class="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
                 This stage is overdue. Submit and get a delay report approved before completion.
+            </p>
+        {/if}
+        {#if isBlocked && !isOverdue}
+            <p class="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                This stage is blocked. Submit a delay report with an updated ETA so admin can review it.
             </p>
         {/if}
 
@@ -54,7 +61,7 @@
             <Form {...complete.form({ jobStage: jobStage.id })}>
                 <button type="submit" class="btn preset-tonal" disabled={!canComplete}>Complete</button>
             </Form>
-            {#if isOverdue}
+            {#if isOverdue || isBlocked || jobStage.status === 'IN_PROGRESS'}
                 <button type="button" class="btn bg-red-600 text-white" onclick={() => (showDelayModal = true)}>Submit Delay Report</button>
             {/if}
         </div>

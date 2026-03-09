@@ -14,10 +14,10 @@
         mechanics,
         filters,
     }: {
-        jobCards: { data: Array<Record<string, string | number>> };
+        jobCards: { data: Array<Record<string, string | number | null>> };
         clients: Array<{ id: number; name: string }>;
         vehicles: Array<{ id: number; registration_number: string; make: string; model: string }>;
-        stages: Array<{ id: number; name: string }>;
+        stages: Array<{ id: number; name: string; sla_value: number; sla_unit: string }>;
         mechanics: Array<{ id: number; name: string }>;
         filters: {
             status?: string | null;
@@ -109,17 +109,44 @@
                 <input type="datetime-local" name="promised_delivery_at" class="w-full rounded-md border px-3 py-2" />
             </label>
 
-            {#each stages as stage (stage.id)}
-                <label class="space-y-1 text-sm">
-                    <span>{stage.name} mechanic</span>
-                    <select name={`assigned_mechanics[${stage.id}]`} class="w-full rounded-md border px-3 py-2">
-                        <option value="">Unassigned</option>
-                        {#each mechanics as mechanic (mechanic.id)}
-                            <option value={mechanic.id}>{mechanic.name}</option>
-                        {/each}
-                    </select>
-                </label>
-            {/each}
+            <div class="space-y-3 md:col-span-2">
+                <p class="text-sm font-medium">Repair route</p>
+                {#each stages as stage, index (stage.id)}
+                    <div class="grid gap-3 rounded-lg border p-3 md:grid-cols-[minmax(0,1fr)_180px_140px_120px]">
+                        <input type="hidden" name={`selected_stages[${index}][stage_id]`} value={stage.id} />
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name={`selected_stages[${index}][enabled]`} value="1" />
+                            <span>{stage.name}</span>
+                        </label>
+                        <label class="space-y-1 text-sm">
+                            <span>Technician</span>
+                            <select name={`selected_stages[${index}][assigned_mechanic_id]`} class="w-full rounded-md border px-3 py-2">
+                                <option value="">Unassigned</option>
+                                {#each mechanics as mechanic (mechanic.id)}
+                                    <option value={mechanic.id}>{mechanic.name}</option>
+                                {/each}
+                            </select>
+                        </label>
+                        <label class="space-y-1 text-sm">
+                            <span>Duration</span>
+                            <input
+                                type="number"
+                                min="1"
+                                name={`selected_stages[${index}][planned_duration_value]`}
+                                class="w-full rounded-md border px-3 py-2"
+                                value={stage.sla_value}
+                            />
+                        </label>
+                        <label class="space-y-1 text-sm">
+                            <span>Unit</span>
+                            <select name={`selected_stages[${index}][planned_duration_unit]`} class="w-full rounded-md border px-3 py-2">
+                                <option value="hours" selected={stage.sla_unit === 'hours'}>Hours</option>
+                                <option value="days" selected={stage.sla_unit === 'days'}>Days</option>
+                            </select>
+                        </label>
+                    </div>
+                {/each}
+            </div>
             <button type="submit" class="btn preset-filled md:col-span-2">Create job card</button>
         </Form>
     </section>
@@ -136,6 +163,7 @@
                     <Accordion.ItemContent class="space-y-1 text-sm text-muted-foreground">
                         <p>Vehicle: {jobCard.vehicle}</p>
                         <p>Client: {jobCard.client_name}</p>
+                        <p>Current stage: {jobCard.current_stage ?? 'Completed'}</p>
                         <a href={`/admin/job-cards/${jobCard.id}`} class="underline">Open job card</a>
                     </Accordion.ItemContent>
                 </Accordion.Item>

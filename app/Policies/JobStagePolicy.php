@@ -48,4 +48,9 @@ class JobStagePolicy
     {
         return $this->start($user, $jobStage);
     }
+
+    public function updatePlan(User $user, JobStage $jobStage): bool
+    {
+        return $user->hasRole('admin') && $jobStage->status === \App\Enums\StageStatus::NotStarted;
+    }
 }

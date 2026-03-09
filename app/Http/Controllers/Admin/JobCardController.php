@@ -4,16 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\IntakeJobCardRequest;
+use App\Http\Requests\UpdateJobStagePlanRequest;
 use App\Models\Client;
 use App\Models\JobCard;
+use App\Models\JobStage;
 use App\Models\Stage;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\JobCardAuditService;
 use App\Services\JobCardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 
 class JobCardController extends Controller
 {
@@ -44,6 +48,10 @@ class JobCardController extends Controller
                     'id' => $jobCard->id,
                     'job_number' => $jobCard->job_number,
                     'status' => $jobCard->status,
+                    'current_stage' => $jobCard->jobStages
+                        ->firstWhere('status', '!=', 'COMPLETED')
+                        ?->stage
+                        ?->name,
                     'vehicle' => $jobCard->vehicle->make.' '.$jobCard->vehicle->model,
                     'registration_number' => $jobCard->vehicle->registration_number,
                     'client_name' => $jobCard->vehicle->client->name,
@@ -51,7 +59,7 @@ class JobCardController extends Controller
                 ]),
             'clients' => Client::query()->orderBy('name')->get(['id', 'name', 'email']),
             'vehicles' => Vehicle::query()->orderBy('registration_number')->get(['id', 'client_id', 'registration_number', 'make', 'model']),
-            'stages' => Stage::query()->orderBy('sequence')->get(['id', 'name', 'sequence']),
+            'stages' => Stage::query()->orderBy('sequence')->get(['id', 'name', 'sequence', 'sla_value', 'sla_unit']),
             'mechanics' => User::query()->role('mechanic')->orderBy('name')->get(['id', 'name', 'email']),
             'filters' => [
                 'status' => $status,
@@ -70,12 +78,16 @@ class JobCardController extends Controller
             'jobCard' => $jobCard->load([
                 'vehicle.client',
                 'creator',
+                'currentJobStage.stage',
+                'audits.actor',
+                'audits.jobStage.stage',
                 'jobStages.stage',
                 'jobStages.assignedMechanic',
                 'jobStages.logs.actor',
                 'jobStages.delayReports.submitter',
                 'jobStages.delayReports.reviewer',
             ]),
+            'mechanics' => User::query()->role('mechanic')->orderBy('name')->get(['id', 'name', 'email']),
             'summaryUrl' => route('admin.job-cards.summary', $jobCard),
         ]);
     }
@@ -99,14 +111,40 @@ class JobCardController extends Controller
             ->with('success', 'Job card created successfully.');
     }
 
+    public function updateStagePlan(UpdateJobStagePlanRequest $request, JobCard $jobCard, JobStage $jobStage): RedirectResponse
+    {
+        $this->authorize('update', $jobCard);
+        $this->authorize('updatePlan', $jobStage);
+
+        if ($jobStage->job_card_id !== $jobCard->id) {
+            abort(404);
+        }
+
+        try {
+            $this->jobCardService->updateFutureStage($jobStage->load(['jobCard', 'stage']), $request->validated(), $request->user());
+        } catch (RuntimeException $exception) {
+            return back()->withErrors(['job_stage' => $exception->getMessage()]);
+        }
+
+        return back()->with('success', 'Future stage updated successfully.');
+    }
+
     public function close(JobCard $jobCard): RedirectResponse
     {
         $this->authorize('close', $jobCard);
 
         $jobCard->update([
             'status' => 'COMPLETED',
+            'current_job_stage_id' => null,
             'closed_at' => now(),
         ]);
+
+        app(JobCardAuditService::class)->record(
+            $jobCard,
+            'JOB_CARD_CLOSED',
+            'Job card manually closed by admin.',
+            request()->user(),
+        );
 
         return back()->with('success', 'Job card closed successfully.');
     }

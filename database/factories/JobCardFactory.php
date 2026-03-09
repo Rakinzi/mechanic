@@ -28,6 +28,7 @@ class JobCardFactory extends Factory
             'customer_complaint' => fake()->sentence(10),
             'diagnosis_notes' => fake()->sentence(12),
             'status' => fake()->randomElement(['OPEN', 'COMPLETED']),
+            'current_job_stage_id' => null,
             'received_at' => now()->subDays(2),
             'promised_delivery_at' => now()->addDays(3),
             'closed_at' => null,

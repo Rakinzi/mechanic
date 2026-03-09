@@ -9,9 +9,11 @@
 
     let {
         jobCard,
+        mechanics,
         summaryUrl,
     }: {
         jobCard: any;
+        mechanics: Array<{ id: number; name: string }>;
         summaryUrl: string;
     } = $props();
 
@@ -28,6 +30,7 @@
         <h2 class="text-lg font-semibold">{jobCard.job_number}</h2>
         <p class="text-sm text-muted-foreground">Vehicle: {jobCard.vehicle.make} {jobCard.vehicle.model} ({jobCard.vehicle.registration_number})</p>
         <p class="text-sm text-muted-foreground">Client: {jobCard.vehicle.client.name}</p>
+        <p class="text-sm text-muted-foreground">Current stage: {jobCard.current_job_stage?.stage?.name ?? 'Completed'}</p>
         <p class="text-sm">Complaint: {jobCard.customer_complaint}</p>
         <div class="flex flex-wrap items-center gap-2">
             <a class="btn preset-tonal" href={summaryUrl} target="_blank" rel="noopener noreferrer">Open PDF-ready summary</a>
@@ -44,6 +47,7 @@
             <nav class="flex flex-col gap-2 text-sm">
                 <a href="#timeline" class="rounded px-2 py-1 hover:bg-muted">Stage Timeline</a>
                 <a href="#delays" class="rounded px-2 py-1 hover:bg-muted">Delay Reports</a>
+                <a href="#audit-trail" class="rounded px-2 py-1 hover:bg-muted">Audit Trail</a>
             </nav>
         </aside>
 
@@ -57,9 +61,52 @@
                         name: stage.stage.name,
                         status: stage.status,
                         due_at: stage.due_at,
+                        planned_due_at: stage.planned_due_at,
+                        planned_duration_value: stage.planned_duration_value,
+                        planned_duration_unit: stage.planned_duration_unit,
                         assigned_mechanic: stage.assigned_mechanic,
                     }))}
                 />
+            </div>
+
+            <div class="space-y-3">
+                <h3 class="text-base font-semibold">Future stage planning</h3>
+                {#each jobCard.job_stages.filter((stage: any) => stage.status === 'NOT_STARTED') as stage (stage.id)}
+                    <Form action={`/admin/job-cards/${jobCard.id}/stages/${stage.id}`} method="post" class="grid gap-3 rounded-lg border p-3 md:grid-cols-4">
+                        <input type="hidden" name="_method" value="PATCH" />
+                        <div>
+                            <p class="text-sm font-medium">{stage.stage.name}</p>
+                            <p class="text-xs text-muted-foreground">Sequence {stage.sequence}</p>
+                        </div>
+                        <label class="space-y-1 text-sm">
+                            <span>Technician</span>
+                            <select name="assigned_mechanic_id" class="w-full rounded-md border px-3 py-2">
+                                <option value="">Unassigned</option>
+                                {#each mechanics as mechanic (mechanic.id)}
+                                    <option value={mechanic.id} selected={stage.assigned_mechanic?.id === mechanic.id}>{mechanic.name}</option>
+                                {/each}
+                            </select>
+                        </label>
+                        <label class="space-y-1 text-sm">
+                            <span>Duration</span>
+                            <input type="number" min="1" name="planned_duration_value" class="w-full rounded-md border px-3 py-2" value={stage.planned_duration_value ?? 1} />
+                        </label>
+                        <label class="space-y-1 text-sm">
+                            <span>Unit</span>
+                            <select name="planned_duration_unit" class="w-full rounded-md border px-3 py-2">
+                                <option value="hours" selected={stage.planned_duration_unit === 'hours'}>Hours</option>
+                                <option value="days" selected={stage.planned_duration_unit === 'days'}>Days</option>
+                            </select>
+                        </label>
+                        <label class="space-y-1 text-sm md:col-span-3">
+                            <span>Admin note</span>
+                            <textarea name="latest_note" class="min-h-20 w-full rounded-md border px-3 py-2">{stage.latest_note ?? ''}</textarea>
+                        </label>
+                        <div class="md:col-span-1 flex items-end">
+                            <button type="submit" class="btn preset-filled w-full">Update future stage</button>
+                        </div>
+                    </Form>
+                {/each}
             </div>
 
             <div id="delays" class="scroll-mt-24 space-y-3">
@@ -79,6 +126,25 @@
                             </div>
                         </div>
                     {/each}
+                {/each}
+            </div>
+
+            <div id="audit-trail" class="scroll-mt-24 space-y-3">
+                <h3 class="text-base font-semibold">Audit Trail</h3>
+                {#each jobCard.audits as audit (audit.id)}
+                    <div class="rounded-lg border p-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="font-medium">{audit.description}</p>
+                            <p class="text-xs text-muted-foreground">{new Date(audit.happened_at).toLocaleString()}</p>
+                        </div>
+                        <div class="mt-1 text-sm text-muted-foreground">
+                            <p>Event: {audit.event}</p>
+                            <p>Actor: {audit.actor?.name ?? 'System'}</p>
+                            {#if audit.job_stage}
+                                <p>Stage: {audit.job_stage.stage.name}</p>
+                            {/if}
+                        </div>
+                    </div>
                 {/each}
             </div>
         </div>

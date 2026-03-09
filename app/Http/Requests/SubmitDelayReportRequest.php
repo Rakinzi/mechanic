@@ -4,10 +4,20 @@ namespace App\Http\Requests;
 
 use App\Enums\DelayReasonCategory;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rules\Enum;
 
 class SubmitDelayReportRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('proposed_eta')) {
+            $this->merge([
+                'proposed_eta' => Carbon::parse($this->input('proposed_eta')),
+            ]);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;

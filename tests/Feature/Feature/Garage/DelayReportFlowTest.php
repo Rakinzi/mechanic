@@ -71,7 +71,7 @@ class DelayReportFlowTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $stage = Stage::factory()->create(['sequence' => 1]);
+        $stage = Stage::query()->where('name', 'Panel Beating')->firstOrFail();
 
         $jobCard = JobCard::factory()->create([
             'vehicle_id' => Vehicle::factory()->create()->id,

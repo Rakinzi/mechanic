@@ -15,7 +15,10 @@ use RuntimeException;
 
 class JobStageService
 {
-    public function __construct(protected StageLogService $stageLogService) {}
+    public function __construct(
+        protected StageLogService $stageLogService,
+        protected JobCardAuditService $jobCardAuditService,
+    ) {}
 
     public function start(JobStage $jobStage, User $actor, ?string $note = null): JobStage
     {
@@ -30,23 +33,42 @@ class JobStageService
         $fromStatus = $jobStage->status->value;
 
         $jobStage = DB::transaction(function () use ($jobStage, $note): JobStage {
+            $dueAt = $this->calculateDueAt($jobStage);
+
             $jobStage->forceFill([
                 'status' => StageStatus::InProgress,
                 'started_at' => now(),
+                'actual_started_at' => now(),
                 'paused_at' => null,
-                'due_at' => $this->calculateDueAt($jobStage),
+                'blocked_at' => null,
+                'due_at' => $dueAt,
+                'planned_due_at' => $jobStage->planned_due_at ?? $dueAt,
                 'last_status_changed_at' => now(),
                 'latest_note' => $note,
             ])->save();
 
-            return $jobStage->fresh(['stage']);
+            $jobStage->jobCard->update([
+                'status' => 'IN_PROGRESS',
+                'current_job_stage_id' => $jobStage->id,
+            ]);
+
+            return $jobStage->fresh(['stage', 'jobCard']);
         });
 
         $this->stageLogService->record($jobStage, StageLogAction::Started->value, $fromStatus, $jobStage->status->value, $actor, [
             'note' => $note,
         ]);
 
-        event(new StageStarted($jobStage, $actor));
+        $this->jobCardAuditService->record(
+            $jobStage->jobCard,
+            'STAGE_STARTED',
+            sprintf('%s started by %s.', $jobStage->stage->name, $actor->name),
+            $actor,
+            $jobStage,
+            ['note' => $note],
+        );
+
+        DB::afterCommit(fn (): mixed => event(new StageStarted($jobStage, $actor)));
 
         return $jobStage;
     }
@@ -58,6 +80,7 @@ class JobStageService
         $jobStage->forceFill([
             'status' => StageStatus::Blocked,
             'paused_at' => now(),
+            'blocked_at' => now(),
             'last_status_changed_at' => now(),
             'latest_note' => $note,
         ])->save();
@@ -68,6 +91,15 @@ class JobStageService
             'note' => $note,
         ]);
 
+        $this->jobCardAuditService->record(
+            $jobStage->jobCard,
+            'STAGE_PAUSED',
+            sprintf('%s paused by %s.', $jobStage->stage->name, $actor->name),
+            $actor,
+            $jobStage,
+            ['note' => $note],
+        );
+
         return $jobStage;
     }
 
@@ -77,6 +109,7 @@ class JobStageService
 
         $jobStage->forceFill([
             'status' => StageStatus::Blocked,
+            'blocked_at' => now(),
             'last_status_changed_at' => now(),
             'latest_note' => $note,
         ])->save();
@@ -86,6 +119,15 @@ class JobStageService
         $this->stageLogService->record($jobStage, StageLogAction::Blocked->value, $fromStatus, $jobStage->status->value, $actor, [
             'note' => $note,
         ]);
+
+        $this->jobCardAuditService->record(
+            $jobStage->jobCard,
+            'STAGE_BLOCKED',
+            sprintf('%s blocked by %s.', $jobStage->stage->name, $actor->name),
+            $actor,
+            $jobStage,
+            ['note' => $note],
+        );
 
         return $jobStage;
     }
@@ -107,16 +149,29 @@ class JobStageService
         $jobStage->forceFill([
             'status' => StageStatus::Completed,
             'completed_at' => now(),
+            'actual_completed_at' => now(),
+            'handoff_ready_at' => now(),
             'last_status_changed_at' => now(),
             'latest_note' => $note,
         ])->save();
 
         $jobStage = $jobStage->fresh(['jobCard']);
 
-        if ($jobStage->jobCard->jobStages()->where('status', '!=', StageStatus::Completed->value)->doesntExist()) {
+        $nextStageId = $jobStage->jobCard->jobStages()
+            ->where('status', '!=', StageStatus::Completed->value)
+            ->orderBy('sequence')
+            ->value('id');
+
+        if ($nextStageId === null) {
             $jobStage->jobCard->update([
                 'status' => 'COMPLETED',
+                'current_job_stage_id' => null,
                 'closed_at' => now(),
+            ]);
+        } else {
+            $jobStage->jobCard->update([
+                'status' => 'IN_PROGRESS',
+                'current_job_stage_id' => $nextStageId,
             ]);
         }
 
@@ -124,7 +179,16 @@ class JobStageService
             'note' => $note,
         ]);
 
-        event(new StageCompleted($jobStage, $actor));
+        $this->jobCardAuditService->record(
+            $jobStage->jobCard,
+            'STAGE_COMPLETED',
+            sprintf('%s completed by %s.', $jobStage->stage->name, $actor->name),
+            $actor,
+            $jobStage,
+            ['note' => $note],
+        );
+
+        DB::afterCommit(fn (): mixed => event(new StageCompleted($jobStage, $actor)));
 
         return $jobStage;
     }
@@ -149,6 +213,14 @@ class JobStageService
         $jobStage = $jobStage->fresh();
 
         $this->stageLogService->record($jobStage, StageLogAction::MarkedOverdue->value, $fromStatus, $jobStage->status->value, null);
+
+        $this->jobCardAuditService->record(
+            $jobStage->jobCard,
+            'STAGE_OVERDUE',
+            sprintf('%s marked overdue.', $jobStage->stage->name),
+            null,
+            $jobStage,
+        );
 
         event(new StageMarkedOverdue($jobStage));
 
@@ -180,10 +252,13 @@ class JobStageService
 
     protected function calculateDueAt(JobStage $jobStage): \Carbon\CarbonInterface
     {
-        if ($jobStage->stage->sla_unit === 'days') {
-            return now()->addDays($jobStage->stage->sla_value);
+        $durationValue = $jobStage->planned_duration_value ?? $jobStage->stage->sla_value;
+        $durationUnit = $jobStage->planned_duration_unit ?? $jobStage->stage->sla_unit;
+
+        if ($durationUnit === 'days') {
+            return now()->addDays($durationValue);
         }
 
-        return now()->addHours($jobStage->stage->sla_value);
+        return now()->addHours($durationValue);
     }
 }

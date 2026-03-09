@@ -42,12 +42,13 @@ class GarageDemoSeeder extends Seeder
         });
 
         $defaultStages = [
-            ['name' => 'Inspection', 'sequence' => 1, 'sla_value' => 6, 'sla_unit' => 'hours'],
-            ['name' => 'Panel Beating', 'sequence' => 2, 'sla_value' => 12, 'sla_unit' => 'hours'],
-            ['name' => 'Painting', 'sequence' => 3, 'sla_value' => 10, 'sla_unit' => 'hours'],
-            ['name' => 'Assembly', 'sequence' => 4, 'sla_value' => 8, 'sla_unit' => 'hours'],
-            ['name' => 'Quality Assurance', 'sequence' => 5, 'sla_value' => 4, 'sla_unit' => 'hours'],
-            ['name' => 'Delivery', 'sequence' => 6, 'sla_value' => 2, 'sla_unit' => 'hours'],
+            ['name' => 'Panel Beating', 'sequence' => 1, 'sla_value' => 12, 'sla_unit' => 'hours'],
+            ['name' => 'Mechanics', 'sequence' => 2, 'sla_value' => 8, 'sla_unit' => 'hours'],
+            ['name' => 'Spraypainting', 'sequence' => 3, 'sla_value' => 10, 'sla_unit' => 'hours'],
+            ['name' => 'Buffing', 'sequence' => 4, 'sla_value' => 4, 'sla_unit' => 'hours'],
+            ['name' => 'Carwash', 'sequence' => 5, 'sla_value' => 2, 'sla_unit' => 'hours'],
+            ['name' => 'Waxing n Polishing', 'sequence' => 6, 'sla_value' => 3, 'sla_unit' => 'hours'],
+            ['name' => 'Release', 'sequence' => 7, 'sla_value' => 1, 'sla_unit' => 'hours'],
         ];
 
         foreach ($defaultStages as $stage) {

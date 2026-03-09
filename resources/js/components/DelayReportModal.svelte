@@ -24,7 +24,7 @@
         <Dialog.Content class="w-full max-w-xl rounded-lg border bg-white p-5 shadow-lg dark:bg-slate-900">
             <Dialog.Title class="text-lg font-semibold">Submit delay report</Dialog.Title>
             <Dialog.Description class="mb-4 text-sm text-muted-foreground">
-                This stage is overdue. Submit a delay report before attempting completion.
+                Use this when the stage is blocked, delayed, or overdue so admin can review the revised ETA.
             </Dialog.Description>
 
             <Form {...storeDelayReport.form({ jobStage: jobStageId })} class="space-y-4">

@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified', 'active', 'role:admin'])->prefix('admin')
     Route::get('job-cards', [JobCardController::class, 'index'])->middleware('permission:manage job cards')->name('job-cards.index');
     Route::post('job-cards', [JobCardController::class, 'store'])->middleware('permission:manage job cards')->name('job-cards.store');
     Route::get('job-cards/{jobCard}', [JobCardController::class, 'show'])->middleware('permission:manage job cards')->name('job-cards.show');
+    Route::patch('job-cards/{jobCard}/stages/{jobStage}', [JobCardController::class, 'updateStagePlan'])->middleware('permission:manage job cards')->name('job-cards.stages.update');
     Route::get('job-cards/{jobCard}/summary', [JobCardSummaryController::class, 'admin'])->middleware('permission:manage job cards')->name('job-cards.summary');
     Route::post('job-cards/{jobCard}/close', [JobCardController::class, 'close'])->middleware('permission:manage job cards')->name('job-cards.close');
 
