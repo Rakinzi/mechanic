@@ -1,5 +1,7 @@
 <script lang="ts">
     import { router } from '@inertiajs/svelte';
+    import ChevronRight from 'lucide-svelte/icons/chevron-right';
+    import Wrench from 'lucide-svelte/icons/wrench';
     import { onDestroy, onMount } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
@@ -36,7 +38,7 @@
 <ClientLayout {breadcrumbs}>
     {#if jobCards.length === 0}
         <div class="rounded-xl border bg-white p-8 text-center shadow-sm dark:bg-slate-900">
-            <p class="text-2xl">🔧</p>
+            <Wrench class="mx-auto size-8 text-muted-foreground" />
             <p class="mt-2 font-medium">No repairs yet</p>
             <p class="text-sm text-muted-foreground">Your repair history will appear here.</p>
         </div>
@@ -59,7 +61,10 @@
                         </div>
                         <div class="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                             <span>Stage: {jobCard.current_job_stage?.stage?.name ?? 'Completed'}</span>
-                            <span class="font-medium text-primary">View progress →</span>
+                            <span class="flex items-center gap-1 font-medium text-primary">
+                                <span>View progress</span>
+                                <ChevronRight class="size-3.5" />
+                            </span>
                         </div>
                     </a>
                 {/each}
@@ -69,7 +74,7 @@
         {#if completedRepairs.length > 0}
             <details class="mt-6 group">
                 <summary class="flex cursor-pointer items-center gap-2 text-sm font-medium text-muted-foreground list-none">
-                    <span class="transition group-open:rotate-90">▶</span>
+                    <ChevronRight class="size-4 transition group-open:rotate-90" />
                     Completed repairs ({completedRepairs.length})
                 </summary>
                 <div class="mt-3 space-y-2">

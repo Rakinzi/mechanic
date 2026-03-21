@@ -1,5 +1,9 @@
 <script lang="ts">
     import { router } from '@inertiajs/svelte';
+    import ChevronRight from 'lucide-svelte/icons/chevron-right';
+    import CircleAlert from 'lucide-svelte/icons/circle-alert';
+    import ClipboardList from 'lucide-svelte/icons/clipboard-list';
+    import Clock3 from 'lucide-svelte/icons/clock-3';
     import { onDestroy, onMount } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
@@ -64,7 +68,7 @@
 <MechanicLayout {breadcrumbs}>
     {#if stages.length === 0}
         <div class="rounded-xl border bg-white p-8 text-center shadow-sm dark:bg-slate-900">
-            <p class="text-2xl">🎉</p>
+            <ClipboardList class="mx-auto size-8 text-muted-foreground" />
             <p class="mt-2 font-medium">No stages assigned</p>
             <p class="text-sm text-muted-foreground">Check back later for new work.</p>
         </div>
@@ -94,7 +98,11 @@
 
                         <div class="mt-3 flex items-center gap-4 text-xs">
                             <span class="flex items-center gap-1 {isOverdue(stage) ? 'font-semibold text-red-600 dark:text-red-400' : 'text-muted-foreground'}">
-                                {#if isOverdue(stage)}⚠️{:else}🕐{/if}
+                                {#if isOverdue(stage)}
+                                    <CircleAlert class="size-3.5" />
+                                {:else}
+                                    <Clock3 class="size-3.5" />
+                                {/if}
                                 {dueLabel(stage)}
                             </span>
                             {#if isUrgent(stage)}
@@ -103,7 +111,10 @@
                                     {isOverdue(stage) ? 'Needs delay report' : 'Blocked — report required'}
                                 </span>
                             {/if}
-                            <span class="ml-auto font-medium text-primary">Open →</span>
+                            <span class="ml-auto flex items-center gap-1 font-medium text-primary">
+                                <span>Open</span>
+                                <ChevronRight class="size-3.5" />
+                            </span>
                         </div>
                     </a>
                 {/each}
@@ -114,7 +125,7 @@
         {#if completedStages.length > 0}
             <details class="mt-6 group">
                 <summary class="flex cursor-pointer items-center gap-2 text-sm font-medium text-muted-foreground list-none">
-                    <span class="transition group-open:rotate-90">▶</span>
+                    <ChevronRight class="size-4 transition group-open:rotate-90" />
                     Completed ({completedStages.length})
                 </summary>
                 <div class="mt-3 space-y-2">

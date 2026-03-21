@@ -1,5 +1,9 @@
 <script lang="ts">
     import { Form } from '@inertiajs/svelte';
+    import ChevronRight from 'lucide-svelte/icons/chevron-right';
+    import Plus from 'lucide-svelte/icons/plus';
+    import User from 'lucide-svelte/icons/user';
+    import X from 'lucide-svelte/icons/x';
     import AppHead from '@/components/AppHead.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
     import AdminLayout from '@/layouts/AdminLayout.svelte';
@@ -16,7 +20,7 @@
     }: {
         jobCards: { data: Array<Record<string, string | number | null>> };
         clients: Array<{ id: number; name: string }>;
-        vehicles: Array<{ id: number; registration_number: string; make: string; model: string }>;
+        vehicles: Array<{ id: number; client_id: number; registration_number: string; make: string; model: string }>;
         stages: Array<{ id: number; name: string; sla_value: number; sla_unit: string }>;
         mechanics: Array<{ id: number; name: string }>;
         filters: {
@@ -30,6 +34,13 @@
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Job Cards', href: '/admin/job-cards' }];
 
     let showCreateForm = $state(false);
+    let selectedClientId = $state<number | null>(null);
+
+    const clientVehicles = $derived(
+        selectedClientId
+            ? vehicles.filter((v) => v.client_id === selectedClientId)
+            : [],
+    );
 </script>
 
 <AppHead title="Job Cards" />
@@ -85,10 +96,16 @@
             <h2 class="text-base font-semibold">Job Cards ({jobCards.data.length})</h2>
             <button
                 type="button"
-                class="btn preset-filled"
+                class="btn preset-filled gap-1.5"
                 onclick={() => (showCreateForm = !showCreateForm)}
             >
-                {showCreateForm ? '✕ Cancel' : '+ New job card'}
+                {#if showCreateForm}
+                    <X class="size-4" />
+                    <span>Cancel</span>
+                {:else}
+                    <Plus class="size-4" />
+                    <span>New job card</span>
+                {/if}
             </button>
         </div>
 
@@ -99,22 +116,63 @@
                 <Form {...store.form()} class="grid gap-3 md:grid-cols-2">
                     <label class="space-y-1 text-sm">
                         <span class="font-medium">Client</span>
-                        <select name="client_id" class="w-full rounded-md border px-3 py-2">
+                        <select
+                            name="client_id"
+                            class="w-full rounded-md border px-3 py-2"
+                            onchange={(e) => {
+                                const val = (e.target as HTMLSelectElement).value;
+                                selectedClientId = val ? Number(val) : null;
+                            }}
+                        >
                             <option value="">Select client</option>
                             {#each clients as client (client.id)}
                                 <option value={client.id}>{client.name}</option>
                             {/each}
                         </select>
                     </label>
-                    <label class="space-y-1 text-sm">
-                        <span class="font-medium">Vehicle</span>
-                        <select name="vehicle_id" class="w-full rounded-md border px-3 py-2">
-                            <option value="">Select vehicle</option>
-                            {#each vehicles as vehicle (vehicle.id)}
-                                <option value={vehicle.id}>{vehicle.registration_number} ({vehicle.make} {vehicle.model})</option>
-                            {/each}
-                        </select>
-                    </label>
+
+                    {#if selectedClientId !== null && clientVehicles.length === 0}
+                        <!-- Client has no vehicles — register one inline -->
+                        <p class="text-sm font-medium text-amber-600 dark:text-amber-400 md:col-span-2">
+                            This client has no registered vehicles. Fill in the details below to register one.
+                        </p>
+                        <label class="space-y-1 text-sm">
+                            <span class="font-medium">Registration number <span class="text-red-500">*</span></span>
+                            <input type="text" name="vehicle[registration_number]" class="w-full rounded-md border px-3 py-2" placeholder="e.g. AB12CDE" required />
+                        </label>
+                        <label class="space-y-1 text-sm">
+                            <span class="font-medium">Make <span class="text-red-500">*</span></span>
+                            <input type="text" name="vehicle[make]" class="w-full rounded-md border px-3 py-2" placeholder="e.g. Toyota" required />
+                        </label>
+                        <label class="space-y-1 text-sm">
+                            <span class="font-medium">Model <span class="text-red-500">*</span></span>
+                            <input type="text" name="vehicle[model]" class="w-full rounded-md border px-3 py-2" placeholder="e.g. Corolla" required />
+                        </label>
+                        <label class="space-y-1 text-sm">
+                            <span class="font-medium">Year</span>
+                            <input type="number" name="vehicle[model_year]" class="w-full rounded-md border px-3 py-2" placeholder="e.g. 2021" min="1950" max="2100" />
+                        </label>
+                        <label class="space-y-1 text-sm">
+                            <span class="font-medium">Colour</span>
+                            <input type="text" name="vehicle[color]" class="w-full rounded-md border px-3 py-2" placeholder="e.g. White" />
+                        </label>
+                        <label class="space-y-1 text-sm">
+                            <span class="font-medium">VIN</span>
+                            <input type="text" name="vehicle[vin]" class="w-full rounded-md border px-3 py-2" placeholder="Optional" />
+                        </label>
+                    {:else}
+                        <label class="space-y-1 text-sm">
+                            <span class="font-medium">Vehicle</span>
+                            <select name="vehicle_id" class="w-full rounded-md border px-3 py-2">
+                                <option value="">
+                                    {selectedClientId ? 'Select vehicle' : 'Select a client first'}
+                                </option>
+                                {#each clientVehicles as vehicle (vehicle.id)}
+                                    <option value={vehicle.id}>{vehicle.registration_number} ({vehicle.make} {vehicle.model})</option>
+                                {/each}
+                            </select>
+                        </label>
+                    {/if}
                     <label class="space-y-1 text-sm md:col-span-2">
                         <span class="font-medium">Customer complaint</span>
                         <textarea name="customer_complaint" class="min-h-20 w-full rounded-md border px-3 py-2" required></textarea>
@@ -202,18 +260,22 @@
                                         {jobCard.current_stage_status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' :
                                          jobCard.current_stage_status === 'OVERDUE'     ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' :
                                          'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}">
-                                        {jobCard.current_stage_status.replace('_', ' ')}
+                                        {String(jobCard.current_stage_status).replace('_', ' ')}
                                     </span>
                                 {/if}
                                 {#if jobCard.current_mechanics}
-                                    <span class="truncate">
-                                        👤 {jobCard.current_mechanics}
+                                    <span class="flex items-center gap-1 truncate">
+                                        <User class="size-3.5 shrink-0" />
+                                        <span class="truncate">{jobCard.current_mechanics}</span>
                                     </span>
                                 {:else if jobCard.current_stage}
                                     <span class="italic text-amber-600 dark:text-amber-400">Unassigned</span>
                                 {/if}
                             </div>
-                            <span class="shrink-0 font-medium text-primary">Open →</span>
+                            <span class="shrink-0 flex items-center gap-1 font-medium text-primary">
+                                <span>Open</span>
+                                <ChevronRight class="size-3.5" />
+                            </span>
                         </div>
                     </a>
                 {/each}

@@ -1,6 +1,12 @@
 <script lang="ts">
     import { Form } from '@inertiajs/svelte';
     import { Accordion } from '@skeletonlabs/skeleton-svelte';
+    import Check from 'lucide-svelte/icons/check';
+    import CircleAlert from 'lucide-svelte/icons/circle-alert';
+    import ClipboardList from 'lucide-svelte/icons/clipboard-list';
+    import Lock from 'lucide-svelte/icons/lock';
+    import Pause from 'lucide-svelte/icons/pause';
+    import Play from 'lucide-svelte/icons/play';
     import AppHead from '@/components/AppHead.svelte';
     import DelayReportModal from '@/components/DelayReportModal.svelte';
     import PhotoGallery from '@/components/PhotoGallery.svelte';
@@ -73,13 +79,13 @@
         <!-- Alert banners -->
         {#if isOverdue && !hasApprovedDelayReport}
             <div class="mt-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
-                <span class="mt-0.5 text-base">⚠️</span>
+                <CircleAlert class="mt-0.5 size-4 shrink-0" />
                 <p>This stage is <strong>overdue</strong>. Submit a delay report and have admin approve it before you can complete this stage.</p>
             </div>
         {/if}
         {#if isBlocked && !isOverdue}
             <div class="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-                <span class="mt-0.5 text-base">🔒</span>
+                <Lock class="mt-0.5 size-4 shrink-0" />
                 <p>This stage is <strong>blocked</strong>. Submit a delay report with an updated ETA so admin can review it.</p>
             </div>
         {/if}
@@ -90,27 +96,31 @@
                 {#if canStart}
                     <Form {...start.form({ jobStage: jobStage.uuid })}>
                         <button type="submit" class="btn preset-filled gap-1.5">
-                            ▶ Start
+                            <Play class="size-4" />
+                            Start
                         </button>
                     </Form>
                 {/if}
                 {#if canPause}
                     <Form {...pause.form({ jobStage: jobStage.uuid })}>
                         <button type="submit" class="btn preset-tonal gap-1.5">
-                            ⏸ Pause
+                            <Pause class="size-4" />
+                            Pause
                         </button>
                     </Form>
                 {/if}
                 {#if canBlock}
                     <Form {...block.form({ jobStage: jobStage.uuid })}>
                         <button type="submit" class="btn preset-tonal gap-1.5">
-                            🔒 Block
+                            <Lock class="size-4" />
+                            Block
                         </button>
                     </Form>
                 {/if}
                 <Form {...complete.form({ jobStage: jobStage.uuid })}>
                     <button type="submit" class="btn gap-1.5 {canComplete ? 'preset-tonal' : 'opacity-40 cursor-not-allowed bg-muted text-muted-foreground'}" disabled={!canComplete}>
-                        ✓ Complete
+                        <Check class="size-4" />
+                        Complete
                     </button>
                 </Form>
                 {#if isOverdue || isBlocked || isInProgress}
@@ -119,13 +129,15 @@
                         class="btn ml-auto gap-1.5 border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-700 dark:bg-red-950/30 dark:text-red-300"
                         onclick={() => (showDelayModal = true)}
                     >
-                        📋 Submit Delay Report
+                        <ClipboardList class="size-4" />
+                        Submit Delay Report
                     </button>
                 {/if}
             </div>
         {:else}
             <div class="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-300">
-                ✓ This stage has been completed.
+                <Check class="size-4 shrink-0" />
+                <span>This stage has been completed.</span>
             </div>
         {/if}
     </div>
