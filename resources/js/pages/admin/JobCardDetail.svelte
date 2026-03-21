@@ -34,11 +34,13 @@
         <p class="text-sm text-muted-foreground">Current stage: {jobCard.current_job_stage?.stage?.name ?? 'Completed'}</p>
         <p class="text-sm">Complaint: {jobCard.customer_complaint}</p>
         <div class="flex flex-wrap items-center gap-2">
-            <a class="btn preset-tonal" href={summaryUrl} target="_blank" rel="noopener noreferrer">Open PDF-ready summary</a>
-            <a class="btn preset-tonal" href={`${summaryUrl}?download=1`}>Download summary</a>
-            <Form {...close.form({ jobCard: jobCard.uuid })}>
-                <button type="submit" class="btn preset-tonal">Close job card</button>
-            </Form>
+            <a class="btn preset-tonal" href={summaryUrl} target="_blank" rel="noopener noreferrer">Open summary</a>
+            <a class="btn preset-tonal" href={`${summaryUrl}?download=1`} target="_blank" rel="noopener noreferrer">Download PDF</a>
+            {#if jobCard.status !== 'COMPLETED'}
+                <Form {...close.form({ jobCard: jobCard.uuid })}>
+                    <button type="submit" class="btn preset-tonal">Close job card</button>
+                </Form>
+            {/if}
         </div>
     </section>
 

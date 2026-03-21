@@ -192,9 +192,28 @@
                             </div>
                             <StatusBadge status={String(jobCard.status)} />
                         </div>
-                        <div class="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                            <span>Stage: {jobCard.current_stage ?? 'All complete'}</span>
-                            <span class="font-medium text-primary">Open →</span>
+                        <div class="mt-2 flex items-center justify-between gap-4 text-xs text-muted-foreground">
+                            <div class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                                <span>
+                                    Stage: <span class="font-medium text-foreground">{jobCard.current_stage ?? 'All complete'}</span>
+                                </span>
+                                {#if jobCard.current_stage_status && jobCard.current_stage_status !== 'NOT_STARTED'}
+                                    <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold
+                                        {jobCard.current_stage_status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' :
+                                         jobCard.current_stage_status === 'OVERDUE'     ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' :
+                                         'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}">
+                                        {jobCard.current_stage_status.replace('_', ' ')}
+                                    </span>
+                                {/if}
+                                {#if jobCard.current_mechanics}
+                                    <span class="truncate">
+                                        👤 {jobCard.current_mechanics}
+                                    </span>
+                                {:else if jobCard.current_stage}
+                                    <span class="italic text-amber-600 dark:text-amber-400">Unassigned</span>
+                                {/if}
+                            </div>
+                            <span class="shrink-0 font-medium text-primary">Open →</span>
                         </div>
                     </a>
                 {/each}

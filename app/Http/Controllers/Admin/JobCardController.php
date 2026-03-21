@@ -33,7 +33,7 @@ class JobCardController extends Controller
         $overdueOnly = $request->boolean('overdue_only');
 
         $jobCards = JobCard::query()
-            ->with(['vehicle.client', 'jobStages.stage'])
+            ->with(['vehicle.client', 'jobStages.stage', 'jobStages.assignedMechanic', 'jobStages.mechanics'])
             ->when($status, fn ($query) => $query->where('status', $status))
             ->when($clientId, fn ($query) => $query->whereHas('vehicle.client', fn ($clientQuery) => $clientQuery->whereKey($clientId)))
             ->when($vehicleRegistration, fn ($query) => $query->whereHas('vehicle', fn ($vehicleQuery) => $vehicleQuery->where('registration_number', 'like', '%'.$vehicleRegistration.'%')))
@@ -49,10 +49,15 @@ class JobCardController extends Controller
                     'uuid' => $jobCard->uuid,
                     'job_number' => $jobCard->job_number,
                     'status' => $jobCard->status,
-                    'current_stage' => $jobCard->jobStages
-                        ->firstWhere('status', '!=', 'COMPLETED')
+                    'current_stage' => ($activeStage = $jobCard->jobStages->firstWhere('status', '!=', 'COMPLETED'))
                         ?->stage
                         ?->name,
+                    'current_stage_status' => $activeStage?->status,
+                    'current_mechanics' => $activeStage
+                        ? ($activeStage->mechanics->isNotEmpty()
+                            ? $activeStage->mechanics->pluck('name')->join(', ')
+                            : $activeStage->assignedMechanic?->name)
+                        : null,
                     'vehicle' => $jobCard->vehicle->make.' '.$jobCard->vehicle->model,
                     'registration_number' => $jobCard->vehicle->registration_number,
                     'client_name' => $jobCard->vehicle->client->name,
