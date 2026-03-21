@@ -84,6 +84,7 @@ class JobCardController extends Controller
                 'audits.jobStage.stage',
                 'jobStages.stage',
                 'jobStages.assignedMechanic',
+                'jobStages.mechanics',
                 'jobStages.logs.actor',
                 'jobStages.delayReports.submitter',
                 'jobStages.delayReports.reviewer',

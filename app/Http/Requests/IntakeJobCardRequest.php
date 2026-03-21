@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IntakeJobCardRequest extends FormRequest
 {
@@ -12,7 +13,11 @@ class IntakeJobCardRequest extends FormRequest
             ->filter(fn (mixed $stage): bool => filled(data_get($stage, 'enabled')) && filled(data_get($stage, 'stage_id')))
             ->map(fn (mixed $stage): array => [
                 'stage_id' => (int) data_get($stage, 'stage_id'),
-                'assigned_mechanic_id' => filled(data_get($stage, 'assigned_mechanic_id')) ? (int) data_get($stage, 'assigned_mechanic_id') : null,
+                'mechanic_ids' => collect((array) data_get($stage, 'mechanic_ids', []))
+                    ->filter()
+                    ->map(fn ($id): int => (int) $id)
+                    ->values()
+                    ->all(),
                 'planned_duration_value' => (int) data_get($stage, 'planned_duration_value'),
                 'planned_duration_unit' => data_get($stage, 'planned_duration_unit', 'hours'),
             ])
@@ -53,7 +58,17 @@ class IntakeJobCardRequest extends FormRequest
             'promised_delivery_at' => ['nullable', 'date', 'after_or_equal:today'],
             'selected_stages' => ['required', 'array', 'min:1'],
             'selected_stages.*.stage_id' => ['required', 'integer', 'distinct', 'exists:stages,id'],
-            'selected_stages.*.assigned_mechanic_id' => ['nullable', 'integer', 'exists:users,id'],
+            'selected_stages.*.mechanic_ids' => ['nullable', 'array'],
+            'selected_stages.*.mechanic_ids.*' => [
+                'integer',
+                Rule::exists('users', 'id')->whereIn('id', function ($query): void {
+                    $query->select('model_id')
+                        ->from('model_has_roles')
+                        ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                        ->where('roles.name', 'mechanic')
+                        ->where('model_has_roles.model_type', \App\Models\User::class);
+                }),
+            ],
             'selected_stages.*.planned_duration_value' => ['required', 'integer', 'min:1', 'max:365'],
             'selected_stages.*.planned_duration_unit' => ['required', 'in:hours,days'],
         ];

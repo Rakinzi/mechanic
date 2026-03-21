@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\Client;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,6 +75,28 @@ class UserManagementController extends Controller
 
             $role = Role::findOrCreate($data['role'], config('auth.defaults.guard', 'web'));
             $user->syncRoles([$role]);
+
+            if ($data['role'] === 'client') {
+                $existingByEmail = Client::query()
+                    ->whereNull('user_id')
+                    ->where('email', $user->email)
+                    ->first();
+
+                if ($existingByEmail) {
+                    $existingByEmail->update([
+                        'user_id' => $user->id,
+                        'name' => $user->name,
+                        'phone' => $user->phone,
+                    ]);
+                } else {
+                    Client::query()->create([
+                        'user_id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                    ]);
+                }
+            }
         });
 
         return back()->with('success', 'User created successfully.');
@@ -100,6 +123,17 @@ class UserManagementController extends Controller
             $user->update($payload);
             $role = Role::findOrCreate($data['role'], config('auth.defaults.guard', 'web'));
             $user->syncRoles([$role]);
+
+            if ($data['role'] === 'client') {
+                Client::query()->updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                    ]
+                );
+            }
         });
 
         return back()->with('success', 'User updated successfully.');

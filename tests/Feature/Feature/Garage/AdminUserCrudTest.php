@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Feature\Garage;
 
+use App\Models\Client;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,6 +36,111 @@ class AdminUserCrudTest extends TestCase
 
         $created = User::query()->where('email', 'created-user@garage.test')->firstOrFail();
         $this->assertTrue($created->hasRole('mechanic'));
+    }
+
+    public function test_admin_creating_client_role_user_also_creates_client_record(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'New Client User',
+            'email' => 'new-client@garage.test',
+            'phone' => '0812345678',
+            'role' => 'client',
+            'password' => 'password123',
+            'is_active' => true,
+        ])->assertRedirect();
+
+        $user = User::query()->where('email', 'new-client@garage.test')->firstOrFail();
+        $this->assertTrue($user->hasRole('client'));
+        $this->assertDatabaseHas('clients', [
+            'user_id' => $user->id,
+            'name' => 'New Client User',
+            'email' => 'new-client@garage.test',
+        ]);
+    }
+
+    public function test_admin_creating_client_user_links_to_existing_walk_in_client_with_same_email(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $walkIn = Client::factory()->create([
+            'user_id' => null,
+            'name' => 'Walk In',
+            'email' => 'walkin@garage.test',
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'Real Name Now',
+            'email' => 'walkin@garage.test',
+            'role' => 'client',
+            'password' => 'password123',
+            'is_active' => true,
+        ])->assertRedirect();
+
+        $user = User::query()->where('email', 'walkin@garage.test')->firstOrFail();
+        $this->assertDatabaseHas('clients', [
+            'id' => $walkIn->id,
+            'user_id' => $user->id,
+            'name' => 'Real Name Now',
+        ]);
+        $this->assertDatabaseCount('clients', 1);
+    }
+
+    public function test_admin_changing_user_role_to_client_creates_client_record_if_missing(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $target = User::factory()->create(['name' => 'Promoted User', 'email' => 'promoted@garage.test']);
+        $target->assignRole('mechanic');
+
+        $this->assertDatabaseMissing('clients', ['user_id' => $target->id]);
+
+        $this->actingAs($admin)->put(route('admin.users.update', $target), [
+            'name' => 'Promoted User',
+            'email' => 'promoted@garage.test',
+            'role' => 'client',
+            'password' => '',
+            'is_active' => true,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('clients', [
+            'user_id' => $target->id,
+            'name' => 'Promoted User',
+            'email' => 'promoted@garage.test',
+        ]);
+    }
+
+    public function test_updating_client_user_details_syncs_client_record(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $target = User::factory()->create(['name' => 'Old Name', 'email' => 'oldname@garage.test']);
+        $target->assignRole('client');
+        Client::factory()->create(['user_id' => $target->id, 'name' => 'Old Name', 'email' => 'oldname@garage.test']);
+
+        $this->actingAs($admin)->put(route('admin.users.update', $target), [
+            'name' => 'New Name',
+            'email' => 'newname@garage.test',
+            'phone' => '0800000001',
+            'role' => 'client',
+            'password' => '',
+            'is_active' => true,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('clients', [
+            'user_id' => $target->id,
+            'name' => 'New Name',
+            'email' => 'newname@garage.test',
+        ]);
     }
 
     public function test_admin_can_update_user(): void

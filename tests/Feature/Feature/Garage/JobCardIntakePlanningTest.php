@@ -42,14 +42,14 @@ class JobCardIntakePlanningTest extends TestCase
                 [
                     'enabled' => 1,
                     'stage_id' => $painting->id,
-                    'assigned_mechanic_id' => $mechanic->id,
+                    'mechanic_ids' => [$mechanic->id],
                     'planned_duration_value' => 3,
                     'planned_duration_unit' => 'days',
                 ],
                 [
                     'enabled' => 1,
                     'stage_id' => $inspection->id,
-                    'assigned_mechanic_id' => null,
+                    'mechanic_ids' => [],
                     'planned_duration_value' => 4,
                     'planned_duration_unit' => 'hours',
                 ],
@@ -69,6 +69,49 @@ class JobCardIntakePlanningTest extends TestCase
         $this->assertSame(2, $jobCard->jobStages[1]->sequence);
         $this->assertSame($mechanic->id, $jobCard->jobStages[1]->assigned_mechanic_id);
         $this->assertSame($jobCard->jobStages[0]->id, $jobCard->current_job_stage_id);
+        $this->assertDatabaseHas('job_stage_mechanics', [
+            'job_stage_id' => $jobCard->jobStages[1]->id,
+            'user_id' => $mechanic->id,
+        ]);
+    }
+
+    public function test_admin_can_assign_multiple_mechanics_to_a_stage(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $client = Client::factory()->create();
+        $vehicle = Vehicle::factory()->create(['client_id' => $client->id]);
+        $stage = Stage::query()->where('name', 'Panel Beating')->firstOrFail();
+
+        $mechanic1 = User::factory()->create();
+        $mechanic1->assignRole('mechanic');
+        $mechanic2 = User::factory()->create();
+        $mechanic2->assignRole('mechanic');
+
+        $this->actingAs($admin)->post(route('admin.job-cards.store'), [
+            'client_id' => $client->id,
+            'vehicle_id' => $vehicle->id,
+            'customer_complaint' => 'Heavy panel damage.',
+            'selected_stages' => [
+                [
+                    'enabled' => 1,
+                    'stage_id' => $stage->id,
+                    'mechanic_ids' => [$mechanic1->id, $mechanic2->id],
+                    'planned_duration_value' => 2,
+                    'planned_duration_unit' => 'days',
+                ],
+            ],
+        ])->assertRedirect();
+
+        $jobCard = JobCard::query()->with('jobStages')->latest('id')->firstOrFail();
+        $jobStage = $jobCard->jobStages->first();
+
+        $this->assertSame($mechanic1->id, $jobStage->assigned_mechanic_id);
+        $this->assertDatabaseHas('job_stage_mechanics', ['job_stage_id' => $jobStage->id, 'user_id' => $mechanic1->id]);
+        $this->assertDatabaseHas('job_stage_mechanics', ['job_stage_id' => $jobStage->id, 'user_id' => $mechanic2->id]);
     }
 
     public function test_admin_can_update_future_stage_plan_but_not_started_stage(): void
@@ -104,7 +147,7 @@ class JobCardIntakePlanningTest extends TestCase
         ]);
 
         $allowedResponse = $this->actingAs($admin)->patch(route('admin.job-cards.stages.update', [$jobCard, $futureStage]), [
-            'assigned_mechanic_id' => $mechanic->id,
+            'mechanic_ids' => [$mechanic->id],
             'planned_duration_value' => 2,
             'planned_duration_unit' => 'days',
             'latest_note' => 'Move to the paint specialist.',
@@ -117,13 +160,90 @@ class JobCardIntakePlanningTest extends TestCase
             'planned_duration_value' => 2,
             'planned_duration_unit' => 'days',
         ]);
+        $this->assertDatabaseHas('job_stage_mechanics', [
+            'job_stage_id' => $futureStage->id,
+            'user_id' => $mechanic->id,
+        ]);
 
         $blockedResponse = $this->actingAs($admin)->patch(route('admin.job-cards.stages.update', [$jobCard, $startedStage]), [
-            'assigned_mechanic_id' => null,
+            'mechanic_ids' => [],
             'planned_duration_value' => 1,
             'planned_duration_unit' => 'hours',
         ]);
 
         $blockedResponse->assertForbidden();
+    }
+
+    public function test_submitting_non_mechanic_user_as_mechanic_id_is_rejected(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $client = Client::factory()->create();
+        $vehicle = Vehicle::factory()->create(['client_id' => $client->id]);
+        $stage = Stage::query()->where('name', 'Panel Beating')->firstOrFail();
+
+        $clientUser = User::factory()->create();
+        $clientUser->assignRole('client');
+
+        $response = $this->actingAs($admin)->post(route('admin.job-cards.store'), [
+            'client_id' => $client->id,
+            'vehicle_id' => $vehicle->id,
+            'customer_complaint' => 'Paint scratches.',
+            'selected_stages' => [
+                [
+                    'enabled' => 1,
+                    'stage_id' => $stage->id,
+                    'mechanic_ids' => [$clientUser->id],
+                    'planned_duration_value' => 1,
+                    'planned_duration_unit' => 'days',
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('selected_stages.0.mechanic_ids.0');
+    }
+
+    public function test_updating_future_stage_with_empty_mechanic_ids_clears_all_mechanics(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $mechanic = User::factory()->create();
+        $mechanic->assignRole('mechanic');
+
+        $jobCard = JobCard::factory()->create([
+            'created_by' => $admin->id,
+            'vehicle_id' => Vehicle::factory()->create()->id,
+            'status' => 'OPEN',
+        ]);
+
+        $futureStage = JobStage::factory()->create([
+            'job_card_id' => $jobCard->id,
+            'stage_id' => Stage::factory()->create(['sequence' => 30])->id,
+            'assigned_mechanic_id' => $mechanic->id,
+            'sequence' => 1,
+            'status' => StageStatus::NotStarted,
+        ]);
+
+        $futureStage->mechanics()->sync([$mechanic->id]);
+
+        $this->actingAs($admin)->patch(route('admin.job-cards.stages.update', [$jobCard, $futureStage]), [
+            'mechanic_ids' => [],
+            'planned_duration_value' => 1,
+            'planned_duration_unit' => 'hours',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('job_stages', [
+            'id' => $futureStage->id,
+            'assigned_mechanic_id' => null,
+        ]);
+        $this->assertDatabaseMissing('job_stage_mechanics', [
+            'job_stage_id' => $futureStage->id,
+        ]);
     }
 }

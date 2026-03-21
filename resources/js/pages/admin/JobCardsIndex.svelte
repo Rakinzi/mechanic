@@ -131,20 +131,20 @@
                     <div class="space-y-3 md:col-span-2">
                         <p class="text-sm font-medium">Repair route</p>
                         {#each stages as stage, index (stage.id)}
-                            <div class="grid gap-3 rounded-lg border p-3 md:grid-cols-[minmax(0,1fr)_180px_140px_120px]">
+                            <div class="grid gap-3 rounded-lg border p-3 md:grid-cols-[minmax(0,1fr)_220px_140px_120px]">
                                 <input type="hidden" name={`selected_stages[${index}][stage_id]`} value={stage.id} />
                                 <label class="flex items-center gap-2 text-sm">
                                     <input type="checkbox" name={`selected_stages[${index}][enabled]`} value="1" />
                                     <span>{stage.name}</span>
                                 </label>
                                 <label class="space-y-1 text-sm">
-                                    <span>Technician</span>
-                                    <select name={`selected_stages[${index}][assigned_mechanic_id]`} class="w-full rounded-md border px-3 py-2">
-                                        <option value="">Unassigned</option>
+                                    <span>Technicians</span>
+                                    <select name={`selected_stages[${index}][mechanic_ids][]`} multiple class="w-full rounded-md border px-3 py-2 min-h-[80px]">
                                         {#each mechanics as mechanic (mechanic.id)}
                                             <option value={mechanic.id}>{mechanic.name}</option>
                                         {/each}
                                     </select>
+                                    <span class="text-xs text-muted-foreground">Hold Ctrl/Cmd to select multiple</span>
                                 </label>
                                 <label class="space-y-1 text-sm">
                                     <span>Duration</span>
