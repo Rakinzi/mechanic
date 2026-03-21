@@ -91,7 +91,7 @@
                             <td>{{ $report->status->value }}</td>
                             <td>{{ $report->reason_category->value }}</td>
                             <td>{{ $report->explanation }}</td>
-                            <td>{{ $report->proposed_eta->toDayDateTimeString() }}</td>
+                            <td>{{ optional($report->proposed_eta)->toDayDateTimeString() ?? 'N/A' }}</td>
                             <td>{{ $report->submitter?->name ?? 'N/A' }}</td>
                             <td>{{ $report->reviewer?->name ?? 'N/A' }}</td>
                         </tr>

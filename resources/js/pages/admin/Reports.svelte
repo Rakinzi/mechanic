@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { Accordion } from '@skeletonlabs/skeleton-svelte';
     import AppHead from '@/components/AppHead.svelte';
     import StageCard from '@/components/StageCard.svelte';
     import AdminLayout from '@/layouts/AdminLayout.svelte';
@@ -19,11 +18,24 @@
 
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Reports', href: '/admin/reports' }];
 
+    const reasonLabels: Record<string, string> = {
+        PARTS_DELAY: 'Parts Delay',
+        EXTERNAL_VENDOR: 'External Vendor',
+        REWORK: 'Rework',
+        CLIENT_APPROVAL: 'Client Approval',
+        ADDITIONAL_DAMAGE: 'Additional Damage',
+        OTHER: 'Other',
+    };
+
+    const maxTurnaround = $derived(Math.max(...analytics.stage_turnaround.map((i) => i.avg_hours), 1));
+    const maxDelays = $derived(Math.max(...analytics.delays_by_mechanic.map((i) => i.delay_count), 1));
+    const maxReasons = $derived(Math.max(...analytics.common_delay_reasons.map((i) => i.total), 1));
 </script>
 
 <AppHead title="Reports" />
 
 <AdminLayout {breadcrumbs}>
+    <!-- Summary KPIs -->
     <div class="grid gap-4 md:grid-cols-5">
         <StageCard title="Total Job Cards" status="OPEN" description={`${summary.totalJobCards}`} />
         <StageCard title="Completed" status="COMPLETED" description={`${summary.completedJobCards}`} />
@@ -32,54 +44,80 @@
         <StageCard title="Approved Delays" status="COMPLETED" description={`${summary.approvedDelayReports}`} />
     </div>
 
-    <section class="mt-6 space-y-3">
-        <h2 class="text-lg font-semibold">Average turnaround by stage (hours)</h2>
-        <Accordion multiple>
-            {#each analytics.stage_turnaround as item (item.stage)}
-                <Accordion.Item value={item.stage} class="rounded-lg border px-3 py-2">
-                    <Accordion.ItemTrigger class="flex w-full items-center justify-between">
-                        <span class="font-medium">{item.stage}</span>
-                        <span class="text-sm text-muted-foreground">{item.avg_hours}</span>
-                    </Accordion.ItemTrigger>
-                    <Accordion.ItemContent class="pt-2 text-sm text-muted-foreground">
-                        Average completion time for {item.stage}: {item.avg_hours} hours.
-                    </Accordion.ItemContent>
-                </Accordion.Item>
-            {/each}
-        </Accordion>
-    </section>
+    <div class="mt-6 grid gap-6 md:grid-cols-2">
+        <!-- Stage turnaround -->
+        <div class="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
+            <h2 class="mb-4 text-base font-semibold">Avg. turnaround by stage</h2>
+            {#if analytics.stage_turnaround.length === 0}
+                <p class="text-sm text-muted-foreground">No data yet.</p>
+            {:else}
+                <div class="space-y-3">
+                    {#each analytics.stage_turnaround as item (item.stage)}
+                        <div>
+                            <div class="mb-1 flex items-center justify-between text-sm">
+                                <span class="font-medium">{item.stage}</span>
+                                <span class="text-muted-foreground">{item.avg_hours}h</span>
+                            </div>
+                            <div class="h-2 w-full overflow-hidden rounded-full bg-muted">
+                                <div
+                                    class="h-2 rounded-full bg-blue-500"
+                                    style="width: {Math.round((item.avg_hours / maxTurnaround) * 100)}%"
+                                ></div>
+                            </div>
+                        </div>
+                    {/each}
+                </div>
+            {/if}
+        </div>
 
-    <section class="mt-6 space-y-3">
-        <h2 class="text-lg font-semibold">Delays by mechanic</h2>
-        <Accordion multiple>
-            {#each analytics.delays_by_mechanic as item (item.mechanic)}
-                <Accordion.Item value={item.mechanic} class="rounded-lg border px-3 py-2">
-                    <Accordion.ItemTrigger class="flex w-full items-center justify-between">
-                        <span class="font-medium">{item.mechanic}</span>
-                        <span class="text-sm text-muted-foreground">{item.delay_count}</span>
-                    </Accordion.ItemTrigger>
-                    <Accordion.ItemContent class="pt-2 text-sm text-muted-foreground">
-                        Total delay reports submitted: {item.delay_count}.
-                    </Accordion.ItemContent>
-                </Accordion.Item>
-            {/each}
-        </Accordion>
-    </section>
+        <!-- Delays by mechanic -->
+        <div class="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
+            <h2 class="mb-4 text-base font-semibold">Delays by mechanic</h2>
+            {#if analytics.delays_by_mechanic.length === 0}
+                <p class="text-sm text-muted-foreground">No data yet.</p>
+            {:else}
+                <div class="space-y-3">
+                    {#each analytics.delays_by_mechanic as item (item.mechanic)}
+                        <div>
+                            <div class="mb-1 flex items-center justify-between text-sm">
+                                <span class="font-medium">{item.mechanic}</span>
+                                <span class="text-muted-foreground">{item.delay_count} reports</span>
+                            </div>
+                            <div class="h-2 w-full overflow-hidden rounded-full bg-muted">
+                                <div
+                                    class="h-2 rounded-full bg-amber-500"
+                                    style="width: {Math.round((item.delay_count / maxDelays) * 100)}%"
+                                ></div>
+                            </div>
+                        </div>
+                    {/each}
+                </div>
+            {/if}
+        </div>
+    </div>
 
-    <section class="mt-6 space-y-3">
-        <h2 class="text-lg font-semibold">Most common delay reasons</h2>
-        <Accordion multiple>
-            {#each analytics.common_delay_reasons as item (item.reason_category)}
-                <Accordion.Item value={item.reason_category} class="rounded-lg border px-3 py-2">
-                    <Accordion.ItemTrigger class="flex w-full items-center justify-between">
-                        <span class="font-medium">{item.reason_category}</span>
-                        <span class="text-sm text-muted-foreground">{item.total}</span>
-                    </Accordion.ItemTrigger>
-                    <Accordion.ItemContent class="pt-2 text-sm text-muted-foreground">
-                        This reason appears in {item.total} delay report(s).
-                    </Accordion.ItemContent>
-                </Accordion.Item>
-            {/each}
-        </Accordion>
-    </section>
+    <!-- Common delay reasons -->
+    <div class="mt-6 rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
+        <h2 class="mb-4 text-base font-semibold">Most common delay reasons</h2>
+        {#if analytics.common_delay_reasons.length === 0}
+            <p class="text-sm text-muted-foreground">No data yet.</p>
+        {:else}
+            <div class="space-y-3">
+                {#each analytics.common_delay_reasons as item (item.reason_category)}
+                    <div>
+                        <div class="mb-1 flex items-center justify-between text-sm">
+                            <span class="font-medium">{reasonLabels[item.reason_category] ?? item.reason_category.replaceAll('_', ' ')}</span>
+                            <span class="text-muted-foreground">{item.total}</span>
+                        </div>
+                        <div class="h-2 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                                class="h-2 rounded-full bg-red-400"
+                                style="width: {Math.round((item.total / maxReasons) * 100)}%"
+                            ></div>
+                        </div>
+                    </div>
+                {/each}
+            </div>
+        {/if}
+    </div>
 </AdminLayout>

@@ -46,6 +46,7 @@ class JobCardController extends Controller
             'jobCards' => $jobCards
                 ->through(fn (JobCard $jobCard): array => [
                     'id' => $jobCard->id,
+                    'uuid' => $jobCard->uuid,
                     'job_number' => $jobCard->job_number,
                     'status' => $jobCard->status,
                     'current_stage' => $jobCard->jobStages
@@ -86,6 +87,7 @@ class JobCardController extends Controller
                 'jobStages.logs.actor',
                 'jobStages.delayReports.submitter',
                 'jobStages.delayReports.reviewer',
+                'jobStages.delayReports.media',
             ]),
             'mechanics' => User::query()->role('mechanic')->orderBy('name')->get(['id', 'name', 'email']),
             'summaryUrl' => route('admin.job-cards.summary', $jobCard),

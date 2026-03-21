@@ -1,9 +1,9 @@
 <script lang="ts">
     import { Form } from '@inertiajs/svelte';
-    import { Accordion } from '@skeletonlabs/skeleton-svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import StatusBadge from '@/components/StatusBadge.svelte';
     import AdminLayout from '@/layouts/AdminLayout.svelte';
-    import { index, store } from '@/routes/admin/job-cards';
+    import { index, show, store } from '@/routes/admin/job-cards';
     import type { BreadcrumbItem } from '@/types';
 
     let {
@@ -28,26 +28,29 @@
     } = $props();
 
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Job Cards', href: '/admin/job-cards' }];
+
+    let showCreateForm = $state(false);
 </script>
 
 <AppHead title="Job Cards" />
 
 <AdminLayout {breadcrumbs}>
-    <section class="space-y-3 rounded-lg border p-4">
-        <h2 class="text-lg font-semibold">Filters</h2>
+    <!-- Filters -->
+    <div class="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
+        <h2 class="mb-3 text-base font-semibold">Filters</h2>
         <form method="GET" action={index().url} class="grid gap-3 md:grid-cols-4">
             <label class="space-y-1 text-sm">
-                <span>Status</span>
+                <span class="font-medium">Status</span>
                 <select name="status" class="w-full rounded-md border px-3 py-2">
-                    <option value="">All</option>
-                    <option value="OPEN" selected={filters.status === 'OPEN'}>OPEN</option>
-                    <option value="IN_PROGRESS" selected={filters.status === 'IN_PROGRESS'}>IN_PROGRESS</option>
-                    <option value="COMPLETED" selected={filters.status === 'COMPLETED'}>COMPLETED</option>
-                    <option value="CANCELLED" selected={filters.status === 'CANCELLED'}>CANCELLED</option>
+                    <option value="">All statuses</option>
+                    <option value="OPEN" selected={filters.status === 'OPEN'}>Open</option>
+                    <option value="IN_PROGRESS" selected={filters.status === 'IN_PROGRESS'}>In Progress</option>
+                    <option value="COMPLETED" selected={filters.status === 'COMPLETED'}>Completed</option>
+                    <option value="CANCELLED" selected={filters.status === 'CANCELLED'}>Cancelled</option>
                 </select>
             </label>
             <label class="space-y-1 text-sm">
-                <span>Client</span>
+                <span class="font-medium">Client</span>
                 <select name="client_id" class="w-full rounded-md border px-3 py-2">
                     <option value="">All clients</option>
                     {#each clients as client (client.id)}
@@ -56,118 +59,146 @@
                 </select>
             </label>
             <label class="space-y-1 text-sm">
-                <span>Vehicle registration</span>
+                <span class="font-medium">Registration</span>
                 <input
                     type="text"
                     name="vehicle_registration"
+                    placeholder="Search..."
                     class="w-full rounded-md border px-3 py-2"
                     value={filters.vehicle_registration ?? ''}
                 />
             </label>
-            <label class="flex items-center gap-2 text-sm pt-6">
+            <label class="flex items-center gap-2 pt-6 text-sm">
                 <input type="checkbox" name="overdue_only" value="1" checked={filters.overdue_only === true} />
-                Overdue only
+                <span class="font-medium">Overdue only</span>
             </label>
-            <div class="md:col-span-4 flex items-center gap-2">
-                <button type="submit" class="btn preset-filled">Apply</button>
+            <div class="flex items-center gap-2 md:col-span-4">
+                <button type="submit" class="btn preset-filled">Apply filters</button>
                 <a href={index().url} class="btn preset-tonal">Reset</a>
             </div>
         </form>
-    </section>
+    </div>
 
-    <section class="space-y-3 rounded-lg border p-4">
-        <h2 class="text-lg font-semibold">Create job card</h2>
-        <Form {...store.form()} class="grid gap-3 md:grid-cols-2">
-            <label class="space-y-1 text-sm">
-                <span>Client</span>
-                <select name="client_id" class="w-full rounded-md border px-3 py-2">
-                    <option value="">Select client</option>
-                    {#each clients as client (client.id)}
-                        <option value={client.id}>{client.name}</option>
-                    {/each}
-                </select>
-            </label>
-            <label class="space-y-1 text-sm">
-                <span>Vehicle</span>
-                <select name="vehicle_id" class="w-full rounded-md border px-3 py-2">
-                    <option value="">Select vehicle</option>
-                    {#each vehicles as vehicle (vehicle.id)}
-                        <option value={vehicle.id}>{vehicle.registration_number} ({vehicle.make} {vehicle.model})</option>
-                    {/each}
-                </select>
-            </label>
-            <label class="space-y-1 text-sm md:col-span-2">
-                <span>Customer complaint</span>
-                <textarea name="customer_complaint" class="min-h-20 w-full rounded-md border px-3 py-2" required></textarea>
-            </label>
-            <label class="space-y-1 text-sm md:col-span-2">
-                <span>Diagnosis notes</span>
-                <textarea name="diagnosis_notes" class="min-h-20 w-full rounded-md border px-3 py-2"></textarea>
-            </label>
-            <label class="space-y-1 text-sm">
-                <span>Promised delivery</span>
-                <input type="datetime-local" name="promised_delivery_at" class="w-full rounded-md border px-3 py-2" />
-            </label>
+    <!-- Job cards list -->
+    <div class="mt-5">
+        <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-base font-semibold">Job Cards ({jobCards.data.length})</h2>
+            <button
+                type="button"
+                class="btn preset-filled"
+                onclick={() => (showCreateForm = !showCreateForm)}
+            >
+                {showCreateForm ? '✕ Cancel' : '+ New job card'}
+            </button>
+        </div>
 
-            <div class="space-y-3 md:col-span-2">
-                <p class="text-sm font-medium">Repair route</p>
-                {#each stages as stage, index (stage.id)}
-                    <div class="grid gap-3 rounded-lg border p-3 md:grid-cols-[minmax(0,1fr)_180px_140px_120px]">
-                        <input type="hidden" name={`selected_stages[${index}][stage_id]`} value={stage.id} />
-                        <label class="flex items-center gap-2 text-sm">
-                            <input type="checkbox" name={`selected_stages[${index}][enabled]`} value="1" />
-                            <span>{stage.name}</span>
-                        </label>
-                        <label class="space-y-1 text-sm">
-                            <span>Technician</span>
-                            <select name={`selected_stages[${index}][assigned_mechanic_id]`} class="w-full rounded-md border px-3 py-2">
-                                <option value="">Unassigned</option>
-                                {#each mechanics as mechanic (mechanic.id)}
-                                    <option value={mechanic.id}>{mechanic.name}</option>
-                                {/each}
-                            </select>
-                        </label>
-                        <label class="space-y-1 text-sm">
-                            <span>Duration</span>
-                            <input
-                                type="number"
-                                min="1"
-                                name={`selected_stages[${index}][planned_duration_value]`}
-                                class="w-full rounded-md border px-3 py-2"
-                                value={stage.sla_value}
-                            />
-                        </label>
-                        <label class="space-y-1 text-sm">
-                            <span>Unit</span>
-                            <select name={`selected_stages[${index}][planned_duration_unit]`} class="w-full rounded-md border px-3 py-2">
-                                <option value="hours" selected={stage.sla_unit === 'hours'}>Hours</option>
-                                <option value="days" selected={stage.sla_unit === 'days'}>Days</option>
-                            </select>
-                        </label>
+        <!-- Create form (collapsible) -->
+        {#if showCreateForm}
+            <div class="mb-5 rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
+                <h3 class="mb-4 text-base font-semibold">Create job card</h3>
+                <Form {...store.form()} class="grid gap-3 md:grid-cols-2">
+                    <label class="space-y-1 text-sm">
+                        <span class="font-medium">Client</span>
+                        <select name="client_id" class="w-full rounded-md border px-3 py-2">
+                            <option value="">Select client</option>
+                            {#each clients as client (client.id)}
+                                <option value={client.id}>{client.name}</option>
+                            {/each}
+                        </select>
+                    </label>
+                    <label class="space-y-1 text-sm">
+                        <span class="font-medium">Vehicle</span>
+                        <select name="vehicle_id" class="w-full rounded-md border px-3 py-2">
+                            <option value="">Select vehicle</option>
+                            {#each vehicles as vehicle (vehicle.id)}
+                                <option value={vehicle.id}>{vehicle.registration_number} ({vehicle.make} {vehicle.model})</option>
+                            {/each}
+                        </select>
+                    </label>
+                    <label class="space-y-1 text-sm md:col-span-2">
+                        <span class="font-medium">Customer complaint</span>
+                        <textarea name="customer_complaint" class="min-h-20 w-full rounded-md border px-3 py-2" required></textarea>
+                    </label>
+                    <label class="space-y-1 text-sm md:col-span-2">
+                        <span class="font-medium">Diagnosis notes</span>
+                        <textarea name="diagnosis_notes" class="min-h-20 w-full rounded-md border px-3 py-2"></textarea>
+                    </label>
+                    <label class="space-y-1 text-sm">
+                        <span class="font-medium">Promised delivery</span>
+                        <input type="datetime-local" name="promised_delivery_at" class="w-full rounded-md border px-3 py-2" />
+                    </label>
+
+                    <div class="space-y-3 md:col-span-2">
+                        <p class="text-sm font-medium">Repair route</p>
+                        {#each stages as stage, index (stage.id)}
+                            <div class="grid gap-3 rounded-lg border p-3 md:grid-cols-[minmax(0,1fr)_180px_140px_120px]">
+                                <input type="hidden" name={`selected_stages[${index}][stage_id]`} value={stage.id} />
+                                <label class="flex items-center gap-2 text-sm">
+                                    <input type="checkbox" name={`selected_stages[${index}][enabled]`} value="1" />
+                                    <span>{stage.name}</span>
+                                </label>
+                                <label class="space-y-1 text-sm">
+                                    <span>Technician</span>
+                                    <select name={`selected_stages[${index}][assigned_mechanic_id]`} class="w-full rounded-md border px-3 py-2">
+                                        <option value="">Unassigned</option>
+                                        {#each mechanics as mechanic (mechanic.id)}
+                                            <option value={mechanic.id}>{mechanic.name}</option>
+                                        {/each}
+                                    </select>
+                                </label>
+                                <label class="space-y-1 text-sm">
+                                    <span>Duration</span>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        name={`selected_stages[${index}][planned_duration_value]`}
+                                        class="w-full rounded-md border px-3 py-2"
+                                        value={stage.sla_value}
+                                    />
+                                </label>
+                                <label class="space-y-1 text-sm">
+                                    <span>Unit</span>
+                                    <select name={`selected_stages[${index}][planned_duration_unit]`} class="w-full rounded-md border px-3 py-2">
+                                        <option value="hours" selected={stage.sla_unit === 'hours'}>Hours</option>
+                                        <option value="days" selected={stage.sla_unit === 'days'}>Days</option>
+                                    </select>
+                                </label>
+                            </div>
+                        {/each}
                     </div>
+                    <button type="submit" class="btn preset-filled md:col-span-2">Create job card</button>
+                </Form>
+            </div>
+        {/if}
+
+        {#if jobCards.data.length === 0}
+            <div class="rounded-xl border bg-white p-8 text-center shadow-sm dark:bg-slate-900">
+                <p class="text-muted-foreground">No job cards match the current filters.</p>
+            </div>
+        {:else}
+            <div class="space-y-3">
+                {#each jobCards.data as jobCard (jobCard.id)}
+                    <a
+                        href={show({ jobCard: String(jobCard.uuid) }).url}
+                        class="block rounded-xl border bg-white p-4 shadow-sm transition hover:shadow-md dark:bg-slate-900
+                            {jobCard.status === 'OVERDUE' ? 'border-red-300 dark:border-red-700' : ''}"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="font-semibold">{jobCard.job_number}</p>
+                                <p class="mt-0.5 truncate text-sm text-muted-foreground">
+                                    {jobCard.client_name} — {jobCard.vehicle}
+                                </p>
+                            </div>
+                            <StatusBadge status={String(jobCard.status)} />
+                        </div>
+                        <div class="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Stage: {jobCard.current_stage ?? 'All complete'}</span>
+                            <span class="font-medium text-primary">Open →</span>
+                        </div>
+                    </a>
                 {/each}
             </div>
-            <button type="submit" class="btn preset-filled md:col-span-2">Create job card</button>
-        </Form>
-    </section>
-
-    <section class="mt-6 space-y-3">
-        <h2 class="text-lg font-semibold">Job cards</h2>
-        <Accordion multiple>
-            {#each jobCards.data as jobCard (jobCard.id)}
-                <Accordion.Item value={String(jobCard.id)} class="rounded-lg border px-3 py-2">
-                    <Accordion.ItemTrigger class="flex w-full items-center justify-between text-left">
-                        <span class="font-medium">{jobCard.job_number}</span>
-                        <span class="text-sm text-muted-foreground">{jobCard.status}</span>
-                    </Accordion.ItemTrigger>
-                    <Accordion.ItemContent class="space-y-1 text-sm text-muted-foreground">
-                        <p>Vehicle: {jobCard.vehicle}</p>
-                        <p>Client: {jobCard.client_name}</p>
-                        <p>Current stage: {jobCard.current_stage ?? 'Completed'}</p>
-                        <a href={`/admin/job-cards/${jobCard.id}`} class="underline">Open job card</a>
-                    </Accordion.ItemContent>
-                </Accordion.Item>
-            {/each}
-        </Accordion>
-    </section>
+        {/if}
+    </div>
 </AdminLayout>

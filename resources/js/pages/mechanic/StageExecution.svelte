@@ -15,15 +15,22 @@
 
     const breadcrumbs = $derived<BreadcrumbItem[]>([
         { title: 'Assigned Stages', href: '/mechanic/assigned-stages' },
-        { title: `Stage #${jobStage.id}`, href: `/mechanic/assigned-stages/${jobStage.id}` },
+        { title: `${jobStage.stage.name} — ${jobStage.job_card.job_number}`, href: `/mechanic/assigned-stages/${jobStage.uuid}` },
     ]);
 
+    const isNotStarted = $derived(jobStage.status === 'NOT_STARTED');
+    const isInProgress = $derived(jobStage.status === 'IN_PROGRESS');
     const isOverdue = $derived(jobStage.status === 'OVERDUE');
     const isBlocked = $derived(jobStage.status === 'BLOCKED');
+    const isCompleted = $derived(jobStage.status === 'COMPLETED');
     const hasApprovedDelayReport = $derived(
         (jobStage.delay_reports ?? []).some((report: { status: string }) => report.status === 'APPROVED'),
     );
-    const canComplete = $derived(!isOverdue || hasApprovedDelayReport);
+
+    const canStart = $derived(isNotStarted || isBlocked);
+    const canPause = $derived(isInProgress || isOverdue);
+    const canBlock = $derived(isInProgress || isOverdue);
+    const canComplete = $derived((isInProgress || isOverdue) && (!isOverdue || hasApprovedDelayReport));
 
     $effect(() => {
         if (isOverdue) {
@@ -35,64 +42,132 @@
 <AppHead title="Stage Execution" />
 
 <MechanicLayout {breadcrumbs}>
-    <section class="space-y-3 rounded-lg border p-4">
-        <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold">{jobStage.stage.name}</h2>
+    <!-- Stage header card -->
+    <div class="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
+        <div class="flex items-start justify-between gap-3">
+            <div>
+                <h2 class="text-xl font-bold">{jobStage.stage.name}</h2>
+                <p class="mt-0.5 text-sm text-muted-foreground">Job <span class="font-medium text-foreground">#{jobStage.job_card.job_number}</span></p>
+            </div>
             <StatusBadge status={jobStage.status} />
         </div>
-        <p class="text-sm text-muted-foreground">Job #{jobStage.job_card.job_number}</p>
-        <p class="text-sm text-muted-foreground">Planned due {jobStage.planned_due_at ? new Date(jobStage.planned_due_at).toLocaleString() : 'N/A'}</p>
-        <p class="text-sm text-muted-foreground">Due {jobStage.due_at ? new Date(jobStage.due_at).toLocaleString() : 'N/A'}</p>
-        {#if isOverdue && !hasApprovedDelayReport}
-            <p class="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
-                This stage is overdue. Submit and get a delay report approved before completion.
-            </p>
-        {/if}
-        {#if isBlocked && !isOverdue}
-            <p class="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-                This stage is blocked. Submit a delay report with an updated ETA so admin can review it.
-            </p>
-        {/if}
 
-        <div class="flex flex-wrap gap-2">
-            <Form {...start.form({ jobStage: jobStage.id })}><button type="submit" class="btn preset-filled">Start</button></Form>
-            <Form {...pause.form({ jobStage: jobStage.id })}><button type="submit" class="btn preset-tonal">Pause</button></Form>
-            <Form {...block.form({ jobStage: jobStage.id })}><button type="submit" class="btn preset-tonal">Block</button></Form>
-            <Form {...complete.form({ jobStage: jobStage.id })}>
-                <button type="submit" class="btn preset-tonal" disabled={!canComplete}>Complete</button>
-            </Form>
-            {#if isOverdue || isBlocked || jobStage.status === 'IN_PROGRESS'}
-                <button type="button" class="btn bg-red-600 text-white" onclick={() => (showDelayModal = true)}>Submit Delay Report</button>
+        <!-- Meta info grid -->
+        <div class="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
+            <div class="rounded-lg bg-muted/40 px-3 py-2">
+                <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Planned due</p>
+                <p class="mt-0.5 font-medium">{jobStage.planned_due_at ? new Date(jobStage.planned_due_at).toLocaleString() : '—'}</p>
+            </div>
+            <div class="rounded-lg px-3 py-2 {isOverdue ? 'bg-red-50 dark:bg-red-950/30' : 'bg-muted/40'}">
+                <p class="text-xs font-medium uppercase tracking-wide {isOverdue ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'}">Due</p>
+                <p class="mt-0.5 font-medium {isOverdue ? 'text-red-700 dark:text-red-300' : ''}">{jobStage.due_at ? new Date(jobStage.due_at).toLocaleString() : '—'}</p>
+            </div>
+            {#if jobStage.job_card?.vehicle}
+                <div class="rounded-lg bg-muted/40 px-3 py-2">
+                    <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Vehicle</p>
+                    <p class="mt-0.5 font-medium">{jobStage.job_card.vehicle.make} {jobStage.job_card.vehicle.model}</p>
+                </div>
             {/if}
         </div>
-    </section>
 
-    <section class="mt-6 space-y-3">
-        <h3 class="text-base font-semibold">Stage media</h3>
-        <PhotoGallery media={jobStage.media ?? []} />
-    </section>
+        <!-- Alert banners -->
+        {#if isOverdue && !hasApprovedDelayReport}
+            <div class="mt-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
+                <span class="mt-0.5 text-base">⚠️</span>
+                <p>This stage is <strong>overdue</strong>. Submit a delay report and have admin approve it before you can complete this stage.</p>
+            </div>
+        {/if}
+        {#if isBlocked && !isOverdue}
+            <div class="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                <span class="mt-0.5 text-base">🔒</span>
+                <p>This stage is <strong>blocked</strong>. Submit a delay report with an updated ETA so admin can review it.</p>
+            </div>
+        {/if}
 
-    <section class="mt-6 space-y-3">
-        <h3 class="text-base font-semibold">Logs</h3>
-        <Accordion multiple>
-            {#each jobStage.logs as log (log.id)}
-                <Accordion.Item value={String(log.id)} class="rounded-md border px-3 py-2">
-                    <Accordion.ItemTrigger class="flex w-full items-center justify-between text-left">
-                        <span class="font-medium">{log.action}</span>
-                        <span class="text-xs text-muted-foreground">{new Date(log.happened_at).toLocaleString()}</span>
-                    </Accordion.ItemTrigger>
-                    <Accordion.ItemContent class="pt-2 text-sm text-muted-foreground">
-                        {#if log.actor}
-                            <p>Actor: {log.actor.name}</p>
-                        {/if}
-                        {#if log.from_status || log.to_status}
-                            <p>Transition: {log.from_status ?? 'N/A'} -> {log.to_status ?? 'N/A'}</p>
-                        {/if}
-                    </Accordion.ItemContent>
-                </Accordion.Item>
-            {/each}
-        </Accordion>
-    </section>
+        <!-- Action buttons -->
+        {#if !isCompleted}
+            <div class="mt-5 flex flex-wrap gap-2 border-t pt-4">
+                {#if canStart}
+                    <Form {...start.form({ jobStage: jobStage.uuid })}>
+                        <button type="submit" class="btn preset-filled gap-1.5">
+                            ▶ Start
+                        </button>
+                    </Form>
+                {/if}
+                {#if canPause}
+                    <Form {...pause.form({ jobStage: jobStage.uuid })}>
+                        <button type="submit" class="btn preset-tonal gap-1.5">
+                            ⏸ Pause
+                        </button>
+                    </Form>
+                {/if}
+                {#if canBlock}
+                    <Form {...block.form({ jobStage: jobStage.uuid })}>
+                        <button type="submit" class="btn preset-tonal gap-1.5">
+                            🔒 Block
+                        </button>
+                    </Form>
+                {/if}
+                <Form {...complete.form({ jobStage: jobStage.uuid })}>
+                    <button type="submit" class="btn gap-1.5 {canComplete ? 'preset-tonal' : 'opacity-40 cursor-not-allowed bg-muted text-muted-foreground'}" disabled={!canComplete}>
+                        ✓ Complete
+                    </button>
+                </Form>
+                {#if isOverdue || isBlocked || isInProgress}
+                    <button
+                        type="button"
+                        class="btn ml-auto gap-1.5 border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-700 dark:bg-red-950/30 dark:text-red-300"
+                        onclick={() => (showDelayModal = true)}
+                    >
+                        📋 Submit Delay Report
+                    </button>
+                {/if}
+            </div>
+        {:else}
+            <div class="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-300">
+                ✓ This stage has been completed.
+            </div>
+        {/if}
+    </div>
 
-    <DelayReportModal jobStageId={jobStage.id} bind:isOpen={showDelayModal} />
+    <!-- Stage media -->
+    <div class="mt-5 rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
+        <h3 class="mb-3 text-base font-semibold">Stage photos</h3>
+        {#if (jobStage.media ?? []).length > 0}
+            <PhotoGallery media={jobStage.media ?? []} />
+        {:else}
+            <p class="text-sm text-muted-foreground">No photos uploaded yet.</p>
+        {/if}
+    </div>
+
+    <!-- Logs -->
+    {#if (jobStage.logs ?? []).length > 0}
+        <div class="mt-5 rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
+            <h3 class="mb-3 text-base font-semibold">Activity log</h3>
+            <Accordion multiple>
+                {#each jobStage.logs as log (log.id)}
+                    <Accordion.Item value={String(log.id)} class="rounded-lg border px-3 py-2">
+                        <Accordion.ItemTrigger class="flex w-full items-center justify-between text-left">
+                            <span class="text-sm font-medium capitalize">{log.action.replace(/_/g, ' ').toLowerCase()}</span>
+                            <span class="text-xs text-muted-foreground">{new Date(log.happened_at).toLocaleString()}</span>
+                        </Accordion.ItemTrigger>
+                        <Accordion.ItemContent class="pt-2 text-sm text-muted-foreground">
+                            {#if log.actor}
+                                <p>By: {log.actor.name}</p>
+                            {/if}
+                            {#if log.from_status || log.to_status}
+                                <p class="mt-0.5">
+                                    {log.from_status?.replace(/_/g, ' ') ?? '—'}
+                                    <span class="mx-1 text-muted-foreground">→</span>
+                                    {log.to_status?.replace(/_/g, ' ') ?? '—'}
+                                </p>
+                            {/if}
+                        </Accordion.ItemContent>
+                    </Accordion.Item>
+                {/each}
+            </Accordion>
+        </div>
+    {/if}
+
+    <DelayReportModal jobStageId={jobStage.uuid} bind:isOpen={showDelayModal} />
 </MechanicLayout>

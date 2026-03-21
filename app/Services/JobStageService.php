@@ -26,6 +26,10 @@ class JobStageService
             throw new RuntimeException('Completed stages cannot be started.');
         }
 
+        if ($jobStage->status === StageStatus::InProgress) {
+            throw new RuntimeException('Stage is already in progress.');
+        }
+
         if (! $this->isPreviousStageCompleted($jobStage)) {
             throw new RuntimeException('Previous stage must be completed first.');
         }
@@ -38,7 +42,7 @@ class JobStageService
             $jobStage->forceFill([
                 'status' => StageStatus::InProgress,
                 'started_at' => now(),
-                'actual_started_at' => now(),
+                'actual_started_at' => $jobStage->actual_started_at ?? now(),
                 'paused_at' => null,
                 'blocked_at' => null,
                 'due_at' => $dueAt,

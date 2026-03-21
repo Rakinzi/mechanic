@@ -32,6 +32,7 @@ class JobCardSummaryController extends Controller
             'jobStages.logs.actor',
             'jobStages.delayReports.submitter',
             'jobStages.delayReports.reviewer',
+            'jobStages.delayReports.media',
             'jobStages.media',
         ]);
 

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Client;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -46,7 +47,7 @@ class UserSeeder extends Seeder
             ['name' => 'Client Two', 'email' => 'client2@garage.test'],
             ['name' => 'Client Three', 'email' => 'client3@garage.test'],
         ])->each(function (array $clientData): void {
-            $client = User::query()->updateOrCreate(
+            $user = User::query()->updateOrCreate(
                 ['email' => $clientData['email']],
                 [
                     'name' => $clientData['name'],
@@ -56,7 +57,16 @@ class UserSeeder extends Seeder
                 ]
             );
 
-            $client->assignRole('client');
+            $user->assignRole('client');
+
+            Client::query()->updateOrCreate(
+                ['email' => $clientData['email']],
+                [
+                    'user_id' => $user->id,
+                    'name' => $clientData['name'],
+                    'email' => $clientData['email'],
+                ]
+            );
         });
     }
 }

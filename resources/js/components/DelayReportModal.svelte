@@ -8,7 +8,7 @@
         jobStageId,
         isOpen = $bindable(false),
     }: {
-        jobStageId: number;
+        jobStageId: string;
         isOpen?: boolean;
     } = $props();
 </script>

@@ -14,33 +14,24 @@
         overlap: false,
     });
 
-    let shown = $state<Set<string>>(new Set());
+    let lastFlash = $state<FlashPayload>({});
 
     $effect(() => {
         const flash = ($page.props.flash ?? {}) as FlashPayload;
 
-        if (flash.success) {
-            const key = `success:${flash.success}`;
-            if (!shown.has(key)) {
-                shown.add(key);
-                toaster.success({ title: 'Success', description: flash.success, closable: true });
-            }
+        if (flash.success && flash.success !== lastFlash.success) {
+            lastFlash = { ...lastFlash, success: flash.success };
+            toaster.success({ title: 'Success', description: flash.success, closable: true });
         }
 
-        if (flash.error) {
-            const key = `error:${flash.error}`;
-            if (!shown.has(key)) {
-                shown.add(key);
-                toaster.error({ title: 'Error', description: flash.error, closable: true });
-            }
+        if (flash.error && flash.error !== lastFlash.error) {
+            lastFlash = { ...lastFlash, error: flash.error };
+            toaster.error({ title: 'Error', description: flash.error, closable: true });
         }
 
-        if (flash.info) {
-            const key = `info:${flash.info}`;
-            if (!shown.has(key)) {
-                shown.add(key);
-                toaster.info({ title: 'Info', description: flash.info, closable: true });
-            }
+        if (flash.info && flash.info !== lastFlash.info) {
+            lastFlash = { ...lastFlash, info: flash.info };
+            toaster.info({ title: 'Info', description: flash.info, closable: true });
         }
     });
 </script>

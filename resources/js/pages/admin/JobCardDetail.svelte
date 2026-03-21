@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Form } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import PhotoGallery from '@/components/PhotoGallery.svelte';
     import StageTimeline from '@/components/StageTimeline.svelte';
     import AdminLayout from '@/layouts/AdminLayout.svelte';
     import { approve, reject } from '@/routes/admin/delay-reports';
@@ -19,7 +20,7 @@
 
     const breadcrumbs = $derived<BreadcrumbItem[]>([
         { title: 'Job Cards', href: '/admin/job-cards' },
-        { title: jobCard.job_number, href: `/admin/job-cards/${jobCard.id}` },
+        { title: jobCard.job_number, href: `/admin/job-cards/${jobCard.uuid}` },
     ]);
 </script>
 
@@ -35,7 +36,7 @@
         <div class="flex flex-wrap items-center gap-2">
             <a class="btn preset-tonal" href={summaryUrl} target="_blank" rel="noopener noreferrer">Open PDF-ready summary</a>
             <a class="btn preset-tonal" href={`${summaryUrl}?download=1`}>Download summary</a>
-            <Form {...close.form({ jobCard: jobCard.id })}>
+            <Form {...close.form({ jobCard: jobCard.uuid })}>
                 <button type="submit" class="btn preset-tonal">Close job card</button>
             </Form>
         </div>
@@ -72,7 +73,7 @@
             <div class="space-y-3">
                 <h3 class="text-base font-semibold">Future stage planning</h3>
                 {#each jobCard.job_stages.filter((stage: any) => stage.status === 'NOT_STARTED') as stage (stage.id)}
-                    <Form action={`/admin/job-cards/${jobCard.id}/stages/${stage.id}`} method="post" class="grid gap-3 rounded-lg border p-3 md:grid-cols-4">
+                    <Form action={`/admin/job-cards/${jobCard.uuid}/stages/${stage.uuid}`} method="post" class="grid gap-3 rounded-lg border p-3 md:grid-cols-4">
                         <input type="hidden" name="_method" value="PATCH" />
                         <div>
                             <p class="text-sm font-medium">{stage.stage.name}</p>
@@ -113,17 +114,38 @@
                 <h3 class="text-base font-semibold">Delay Reports</h3>
                 {#each jobCard.job_stages as stage (stage.id)}
                     {#each stage.delay_reports as report (report.id)}
-                        <div class="rounded-lg border p-3">
-                            <p class="font-medium">{stage.stage.name} - {report.status}</p>
-                            <p class="text-sm">{report.explanation}</p>
-                            <div class="mt-2 flex gap-2">
-                                <Form {...approve.form({ delayReport: report.id })}>
-                                    <button type="submit" class="btn preset-filled">Approve</button>
-                                </Form>
-                                <Form {...reject.form({ delayReport: report.id })}>
-                                    <button type="submit" class="btn bg-red-600 text-white">Reject</button>
-                                </Form>
+                        <div class="rounded-lg border p-3 space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="font-medium">{stage.stage.name}</p>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full
+                                    {report.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
+                                     report.status === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' :
+                                     'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'}">
+                                    {report.status}
+                                </span>
                             </div>
+                            <p class="text-sm text-muted-foreground">Reason: {report.reason_category}</p>
+                            <p class="text-sm">{report.explanation}</p>
+                            <p class="text-xs text-muted-foreground">Proposed ETA: {report.proposed_eta ? new Date(report.proposed_eta).toLocaleString() : 'N/A'}</p>
+                            <p class="text-xs text-muted-foreground">Submitted by: {report.submitter?.name ?? 'N/A'}</p>
+                            {#if (report.media ?? []).length > 0}
+                                <div class="mt-2">
+                                    <p class="text-xs font-medium mb-1">Attachments</p>
+                                    <PhotoGallery media={report.media} />
+                                </div>
+                            {/if}
+                            {#if report.status === 'PENDING'}
+                                <div class="mt-2 flex gap-2">
+                                    <Form {...approve.form({ delayReport: report.id })}>
+                                        <button type="submit" class="btn preset-filled">Approve</button>
+                                    </Form>
+                                    <Form {...reject.form({ delayReport: report.id })}>
+                                        <button type="submit" class="btn bg-red-600 text-white">Reject</button>
+                                    </Form>
+                                </div>
+                            {:else if report.review_comment}
+                                <p class="text-xs text-muted-foreground">Review comment: {report.review_comment}</p>
+                            {/if}
                         </div>
                     {/each}
                 {/each}
