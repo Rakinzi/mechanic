@@ -46,6 +46,7 @@
     function submit(e: Event) {
         e.preventDefault();
         $form.post(route.url, {
+            forceFormData: true,
             onSuccess: () => {
                 isOpen = false;
                 $form.reset();

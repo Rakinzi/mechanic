@@ -271,6 +271,11 @@
                                 {:else if jobCard.current_stage}
                                     <span class="italic text-amber-600 dark:text-amber-400">Unassigned</span>
                                 {/if}
+                                {#if jobCard.pending_delay_reports_count > 0}
+                                    <span class="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                                        {jobCard.pending_delay_reports_count} delay report{Number(jobCard.pending_delay_reports_count) !== 1 ? 's' : ''}
+                                    </span>
+                                {/if}
                             </div>
                             <span class="shrink-0 flex items-center gap-1 font-medium text-primary">
                                 <span>Open</span>

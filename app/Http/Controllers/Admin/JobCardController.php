@@ -34,6 +34,7 @@ class JobCardController extends Controller
 
         $jobCards = JobCard::query()
             ->with(['vehicle.client', 'jobStages.stage', 'jobStages.assignedMechanic', 'jobStages.mechanics'])
+            ->withCount(['jobStages as pending_delay_reports_count' => fn ($query) => $query->join('delay_reports', 'delay_reports.job_stage_id', '=', 'job_stages.id')->where('delay_reports.status', 'PENDING')])
             ->when($status, fn ($query) => $query->where('status', $status))
             ->when($clientId, fn ($query) => $query->whereHas('vehicle.client', fn ($clientQuery) => $clientQuery->whereKey($clientId)))
             ->when($vehicleRegistration, fn ($query) => $query->whereHas('vehicle', fn ($vehicleQuery) => $vehicleQuery->where('registration_number', 'like', '%'.$vehicleRegistration.'%')))
@@ -62,6 +63,7 @@ class JobCardController extends Controller
                     'registration_number' => $jobCard->vehicle->registration_number,
                     'client_name' => $jobCard->vehicle->client->name,
                     'created_at' => $jobCard->created_at?->toDateTimeString(),
+                    'pending_delay_reports_count' => $jobCard->pending_delay_reports_count,
                 ]),
             'clients' => Client::query()->orderBy('name')->get(['id', 'name', 'email']),
             'vehicles' => Vehicle::query()->orderBy('registration_number')->get(['id', 'client_id', 'registration_number', 'make', 'model']),
