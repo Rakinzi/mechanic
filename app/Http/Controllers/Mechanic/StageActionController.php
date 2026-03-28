@@ -17,7 +17,11 @@ class StageActionController extends Controller
     {
         $this->authorize('start', $jobStage);
 
-        $this->jobStageService->start($jobStage->load(['stage', 'jobCard']), $request->user(), $request->string('note')->toString());
+        try {
+            $this->jobStageService->start($jobStage->load(['stage', 'jobCard']), $request->user(), $request->string('note')->toString());
+        } catch (RuntimeException $exception) {
+            return back()->withErrors(['stage' => $exception->getMessage()]);
+        }
 
         return back()->with('success', 'Stage started successfully.');
     }

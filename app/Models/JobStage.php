@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StageStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -98,6 +99,34 @@ class JobStage extends Model implements HasMedia
     public function mechanics(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'job_stage_mechanics')->withTimestamps();
+    }
+
+    public function scopeAssignedToMechanic(Builder $query, User|int $mechanic): Builder
+    {
+        $mechanicId = $mechanic instanceof User ? $mechanic->getKey() : $mechanic;
+
+        return $query->where(function (Builder $builder) use ($mechanicId): void {
+            $builder
+                ->where('assigned_mechanic_id', $mechanicId)
+                ->orWhereHas('mechanics', function (Builder $mechanicsQuery) use ($mechanicId): void {
+                    $mechanicsQuery->whereKey($mechanicId);
+                });
+        });
+    }
+
+    public function isAssignedToMechanic(User|int $mechanic): bool
+    {
+        $mechanicId = $mechanic instanceof User ? $mechanic->getKey() : $mechanic;
+
+        if ($this->assigned_mechanic_id === $mechanicId) {
+            return true;
+        }
+
+        if ($this->relationLoaded('mechanics')) {
+            return $this->mechanics->contains('id', $mechanicId);
+        }
+
+        return $this->mechanics()->whereKey($mechanicId)->exists();
     }
 
     public function logs(): HasMany

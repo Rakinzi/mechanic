@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Form } from '@inertiajs/svelte';
+    import { Form, page } from '@inertiajs/svelte';
     import { Accordion } from '@skeletonlabs/skeleton-svelte';
     import Check from 'lucide-svelte/icons/check';
     import CircleAlert from 'lucide-svelte/icons/circle-alert';
@@ -8,6 +8,7 @@
     import Pause from 'lucide-svelte/icons/pause';
     import Play from 'lucide-svelte/icons/play';
     import AppHead from '@/components/AppHead.svelte';
+    import AlertError from '@/components/AlertError.svelte';
     import DelayReportModal from '@/components/DelayReportModal.svelte';
     import PhotoGallery from '@/components/PhotoGallery.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
@@ -37,6 +38,16 @@
     const canPause = $derived(isInProgress || isOverdue);
     const canBlock = $derived(isInProgress || isOverdue);
     const canComplete = $derived((isInProgress || isOverdue) && (!isOverdue || hasApprovedDelayReport));
+    const stageErrors = $derived.by(() => {
+        const errors = ($page.props.errors ?? {}) as Record<string, string | string[] | undefined>;
+        const stageError = errors.stage;
+
+        if (Array.isArray(stageError)) {
+            return stageError.filter(Boolean);
+        }
+
+        return stageError ? [stageError] : [];
+    });
 
     $effect(() => {
         if (isOverdue) {
@@ -87,6 +98,11 @@
             <div class="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
                 <Lock class="mt-0.5 size-4 shrink-0" />
                 <p>This stage is <strong>blocked</strong>. Submit a delay report with an updated ETA so admin can review it.</p>
+            </div>
+        {/if}
+        {#if stageErrors.length > 0}
+            <div class="mt-4">
+                <AlertError errors={stageErrors} title="Stage action could not be completed." />
             </div>
         {/if}
 

@@ -19,7 +19,7 @@ class JobCardPolicy
         }
 
         if ($user->hasRole('mechanic')) {
-            return $jobCard->jobStages()->where('assigned_mechanic_id', $user->id)->exists();
+            return $jobCard->jobStages()->assignedToMechanic($user)->exists();
         }
 
         if ($user->hasRole('client')) {

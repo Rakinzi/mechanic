@@ -14,7 +14,7 @@ class JobStagePolicy
         }
 
         if ($user->hasRole('mechanic')) {
-            return $jobStage->assigned_mechanic_id === $user->id;
+            return $jobStage->isAssignedToMechanic($user);
         }
 
         if ($user->hasRole('client')) {
@@ -26,7 +26,7 @@ class JobStagePolicy
 
     public function start(User $user, JobStage $jobStage): bool
     {
-        return $user->hasRole('mechanic') && $jobStage->assigned_mechanic_id === $user->id;
+        return $user->hasRole('mechanic') && $jobStage->isAssignedToMechanic($user);
     }
 
     public function pause(User $user, JobStage $jobStage): bool
