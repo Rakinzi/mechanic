@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Vehicle;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -45,7 +46,25 @@ class IntakeJobCardRequest extends FormRequest
             'client.email' => ['nullable', 'email', 'max:255'],
             'client.phone' => ['nullable', 'string', 'max:40'],
             'client.address' => ['nullable', 'string', 'max:500'],
-            'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
+            'vehicle_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('vehicles', 'id'),
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! filled($value) || ! $this->filled('client_id')) {
+                        return;
+                    }
+
+                    $belongsToClient = Vehicle::query()
+                        ->whereKey((int) $value)
+                        ->where('client_id', $this->integer('client_id'))
+                        ->exists();
+
+                    if (! $belongsToClient) {
+                        $fail('The selected vehicle does not belong to the chosen client.');
+                    }
+                },
+            ],
             'vehicle.registration_number' => ['required_without:vehicle_id', 'string', 'max:100'],
             'vehicle.vin' => ['nullable', 'string', 'max:100'],
             'vehicle.make' => ['required_without:vehicle_id', 'string', 'max:100'],

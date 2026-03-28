@@ -35,6 +35,7 @@
 
     let showCreateForm = $state(false);
     let selectedClientId = $state<number | null>(null);
+    let useNewVehicle = $state(false);
 
     const clientVehicles = $derived(
         selectedClientId
@@ -122,6 +123,7 @@
                             onchange={(e) => {
                                 const val = (e.target as HTMLSelectElement).value;
                                 selectedClientId = val ? Number(val) : null;
+                                useNewVehicle = false;
                             }}
                         >
                             <option value="">Select client</option>
@@ -131,10 +133,32 @@
                         </select>
                     </label>
 
-                    {#if selectedClientId !== null && clientVehicles.length === 0}
+                    {#if selectedClientId !== null && clientVehicles.length > 0}
+                        <div class="space-y-3 md:col-span-2">
+                            <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed px-4 py-3">
+                                <div>
+                                    <p class="text-sm font-medium">Vehicle selection</p>
+                                    <p class="text-xs text-muted-foreground">
+                                        This client already has {clientVehicles.length} registered vehicle{clientVehicles.length !== 1 ? 's' : ''}.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="btn preset-tonal"
+                                    onclick={() => (useNewVehicle = !useNewVehicle)}
+                                >
+                                    {useNewVehicle ? 'Use existing vehicle' : 'Register another vehicle'}
+                                </button>
+                            </div>
+                        </div>
+                    {/if}
+
+                    {#if selectedClientId !== null && (clientVehicles.length === 0 || useNewVehicle)}
                         <!-- Client has no vehicles — register one inline -->
                         <p class="text-sm font-medium text-amber-600 dark:text-amber-400 md:col-span-2">
-                            This client has no registered vehicles. Fill in the details below to register one.
+                            {clientVehicles.length === 0
+                                ? 'This client has no registered vehicles. Fill in the details below to register one.'
+                                : 'Register a new vehicle for this client, then the job card will be created against it.'}
                         </p>
                         <label class="space-y-1 text-sm">
                             <span class="font-medium">Registration number <span class="text-red-500">*</span></span>
@@ -163,7 +187,7 @@
                     {:else}
                         <label class="space-y-1 text-sm">
                             <span class="font-medium">Vehicle</span>
-                            <select name="vehicle_id" class="w-full rounded-md border px-3 py-2">
+                            <select name="vehicle_id" class="w-full rounded-md border px-3 py-2" required={selectedClientId !== null}>
                                 <option value="">
                                     {selectedClientId ? 'Select vehicle' : 'Select a client first'}
                                 </option>
@@ -171,6 +195,9 @@
                                     <option value={vehicle.id}>{vehicle.registration_number} ({vehicle.make} {vehicle.model})</option>
                                 {/each}
                             </select>
+                            {#if selectedClientId !== null && clientVehicles.length > 0}
+                                <span class="text-xs text-muted-foreground">Choose an existing vehicle or use “Register another vehicle”.</span>
+                            {/if}
                         </label>
                     {/if}
                     <label class="space-y-1 text-sm md:col-span-2">

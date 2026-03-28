@@ -246,4 +246,86 @@ class JobCardIntakePlanningTest extends TestCase
             'job_stage_id' => $futureStage->id,
         ]);
     }
+
+    public function test_admin_can_create_job_card_with_new_vehicle_for_existing_client(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $client = Client::factory()->create();
+        Vehicle::factory()->create([
+            'client_id' => $client->id,
+            'registration_number' => 'OLD-111',
+        ]);
+
+        $stage = Stage::query()->where('name', 'Panel Beating')->firstOrFail();
+
+        $response = $this->actingAs($admin)->post(route('admin.job-cards.store'), [
+            'client_id' => $client->id,
+            'customer_complaint' => 'Second vehicle needs assessment.',
+            'diagnosis_notes' => 'Existing client arrived with another car.',
+            'vehicle' => [
+                'registration_number' => 'NEW-222',
+                'make' => 'Honda',
+                'model' => 'Fit',
+                'model_year' => 2020,
+                'color' => 'Silver',
+            ],
+            'selected_stages' => [
+                [
+                    'enabled' => 1,
+                    'stage_id' => $stage->id,
+                    'mechanic_ids' => [],
+                    'planned_duration_value' => 1,
+                    'planned_duration_unit' => 'days',
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect();
+
+        $vehicle = Vehicle::query()->where('registration_number', 'NEW-222')->firstOrFail();
+
+        $this->assertSame($client->id, $vehicle->client_id);
+        $this->assertDatabaseCount('vehicles', 2);
+        $this->assertDatabaseHas('job_cards', [
+            'vehicle_id' => $vehicle->id,
+        ]);
+    }
+
+    public function test_vehicle_must_belong_to_selected_client_when_creating_job_card(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $selectedClient = Client::factory()->create();
+        $otherClient = Client::factory()->create();
+        $otherVehicle = Vehicle::factory()->create([
+            'client_id' => $otherClient->id,
+        ]);
+
+        $stage = Stage::query()->where('name', 'Panel Beating')->firstOrFail();
+
+        $response = $this->actingAs($admin)->post(route('admin.job-cards.store'), [
+            'client_id' => $selectedClient->id,
+            'vehicle_id' => $otherVehicle->id,
+            'customer_complaint' => 'Mismatched vehicle test.',
+            'selected_stages' => [
+                [
+                    'enabled' => 1,
+                    'stage_id' => $stage->id,
+                    'mechanic_ids' => [],
+                    'planned_duration_value' => 1,
+                    'planned_duration_unit' => 'days',
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('vehicle_id');
+        $this->assertDatabaseCount('job_cards', 0);
+    }
 }
