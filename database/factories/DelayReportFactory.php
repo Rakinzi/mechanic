@@ -28,7 +28,7 @@ class DelayReportFactory extends Factory
             'submitted_by' => User::factory(),
             'reviewed_by' => null,
             'reason_category' => DelayReasonCategory::Other,
-            'explanation' => fake()->paragraph(),
+            'explanation' => $this->faker->paragraph(),
             'proposed_eta' => now()->addDay(),
             'status' => DelayReportStatus::Pending,
             'review_comment' => null,

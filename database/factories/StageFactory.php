@@ -19,12 +19,12 @@ class StageFactory extends Factory
      */
     public function definition(): array
     {
-        $sequence = fake()->unique()->numberBetween(1, 6);
+        $sequence = $this->faker->unique()->numberBetween(1, 6);
 
         return [
             'name' => 'Stage '.$sequence,
             'sequence' => $sequence,
-            'sla_value' => fake()->numberBetween(4, 24),
+            'sla_value' => $this->faker->numberBetween(4, 24),
             'sla_unit' => 'hours',
             'is_active' => true,
         ];

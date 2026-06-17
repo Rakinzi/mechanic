@@ -22,14 +22,14 @@ class VehicleFactory extends Factory
     {
         return [
             'client_id' => Client::factory(),
-            'registration_number' => strtoupper(fake()->bothify('??##???')),
-            'vin' => strtoupper(fake()->bothify('###############??')),
-            'make' => fake()->randomElement(['Toyota', 'Honda', 'BMW', 'Nissan', 'Ford']),
-            'model' => fake()->randomElement(['Corolla', 'Civic', 'X5', 'Qashqai', 'Ranger']),
-            'model_year' => fake()->numberBetween(2008, 2025),
-            'color' => fake()->safeColorName(),
-            'odometer_km' => fake()->numberBetween(10000, 220000),
-            'notes' => fake()->sentence(),
+            'registration_number' => strtoupper($this->faker->bothify('??##???')),
+            'vin' => strtoupper($this->faker->bothify('###############??')),
+            'make' => $this->faker->randomElement(['Toyota', 'Honda', 'BMW', 'Nissan', 'Ford']),
+            'model' => $this->faker->randomElement(['Corolla', 'Civic', 'X5', 'Qashqai', 'Ranger']),
+            'model_year' => $this->faker->numberBetween(2008, 2025),
+            'color' => $this->faker->safeColorName(),
+            'odometer_km' => $this->faker->numberBetween(10000, 220000),
+            'notes' => $this->faker->sentence(),
         ];
     }
 }

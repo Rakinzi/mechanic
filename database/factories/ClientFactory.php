@@ -20,12 +20,12 @@ class ClientFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_name' => fake()->boolean(30) ? fake()->company() : null,
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'phone' => fake()->phoneNumber(),
-            'address' => fake()->address(),
-            'notes' => fake()->sentence(),
+            'company_name' => $this->faker->boolean(30) ? $this->faker->company() : null,
+            'name' => $this->faker->name(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'phone' => $this->faker->phoneNumber(),
+            'address' => $this->faker->address(),
+            'notes' => $this->faker->sentence(),
         ];
     }
 }
