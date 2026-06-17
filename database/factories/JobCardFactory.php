@@ -21,13 +21,16 @@ class JobCardFactory extends Factory
      */
     public function definition(): array
     {
+        static $counter = 0;
+        $counter++;
+
         return [
             'vehicle_id' => Vehicle::factory(),
             'created_by' => User::factory(),
-            'job_number' => 'JC-'.now()->format('Ymd').'-'.str_pad((string) $this->faker->numberBetween(1, 99999), 5, '0', STR_PAD_LEFT),
-            'customer_complaint' => $this->faker->sentence(10),
-            'diagnosis_notes' => $this->faker->sentence(12),
-            'status' => $this->faker->randomElement(['OPEN', 'COMPLETED']),
+            'job_number' => 'JC-'.now()->format('Ymd').'-'.str_pad((string) $counter, 5, '0', STR_PAD_LEFT),
+            'customer_complaint' => 'Customer complaint '.$counter,
+            'diagnosis_notes' => 'Diagnosis notes '.$counter,
+            'status' => 'OPEN',
             'current_job_stage_id' => null,
             'received_at' => now()->subDays(2),
             'promised_delivery_at' => now()->addDays(3),

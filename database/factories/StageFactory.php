@@ -19,12 +19,13 @@ class StageFactory extends Factory
      */
     public function definition(): array
     {
-        $sequence = $this->faker->unique()->numberBetween(1, 6);
+        static $counter = 0;
+        $counter++;
 
         return [
-            'name' => 'Stage '.$sequence,
-            'sequence' => $sequence,
-            'sla_value' => $this->faker->numberBetween(4, 24),
+            'name' => 'Stage '.$counter,
+            'sequence' => $counter,
+            'sla_value' => 8,
             'sla_unit' => 'hours',
             'is_active' => true,
         ];

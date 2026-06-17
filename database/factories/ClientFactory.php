@@ -19,13 +19,16 @@ class ClientFactory extends Factory
      */
     public function definition(): array
     {
+        static $counter = 0;
+        $counter++;
+
         return [
-            'company_name' => $this->faker->boolean(30) ? $this->faker->company() : null,
-            'name' => $this->faker->name(),
-            'email' => $this->faker->unique()->safeEmail(),
-            'phone' => $this->faker->phoneNumber(),
-            'address' => $this->faker->address(),
-            'notes' => $this->faker->sentence(),
+            'company_name' => null,
+            'name' => 'Client '.$counter,
+            'email' => 'client'.$counter.'@example.com',
+            'phone' => '+1 555 000 0'.$counter,
+            'address' => $counter.' Main Street',
+            'notes' => null,
         ];
     }
 }

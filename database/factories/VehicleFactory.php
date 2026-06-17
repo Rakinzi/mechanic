@@ -20,16 +20,24 @@ class VehicleFactory extends Factory
      */
     public function definition(): array
     {
+        static $counter = 0;
+        $counter++;
+
+        $makes = ['Toyota', 'Honda', 'BMW', 'Nissan', 'Ford'];
+        $models = ['Corolla', 'Civic', 'X5', 'Qashqai', 'Ranger'];
+        $colors = ['White', 'Black', 'Silver', 'Blue', 'Red'];
+        $idx = ($counter - 1) % 5;
+
         return [
             'client_id' => Client::factory(),
-            'registration_number' => strtoupper($this->faker->bothify('??##???')),
-            'vin' => strtoupper($this->faker->bothify('###############??')),
-            'make' => $this->faker->randomElement(['Toyota', 'Honda', 'BMW', 'Nissan', 'Ford']),
-            'model' => $this->faker->randomElement(['Corolla', 'Civic', 'X5', 'Qashqai', 'Ranger']),
-            'model_year' => $this->faker->numberBetween(2008, 2025),
-            'color' => $this->faker->safeColorName(),
-            'odometer_km' => $this->faker->numberBetween(10000, 220000),
-            'notes' => $this->faker->sentence(),
+            'registration_number' => strtoupper('AB'.str_pad((string) $counter, 2, '0', STR_PAD_LEFT).'CD'.$counter),
+            'vin' => strtoupper('VIN'.str_pad((string) $counter, 14, '0', STR_PAD_LEFT)),
+            'make' => $makes[$idx],
+            'model' => $models[$idx],
+            'model_year' => 2015 + ($counter % 10),
+            'color' => $colors[$idx],
+            'odometer_km' => 50000 + ($counter * 10000),
+            'notes' => null,
         ];
     }
 }
