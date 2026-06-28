@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Mechanic;
+namespace App\Http\Controllers\Technician;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SubmitDelayReportRequest;

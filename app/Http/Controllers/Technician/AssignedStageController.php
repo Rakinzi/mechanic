@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Mechanic;
+namespace App\Http\Controllers\Technician;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobStage;
@@ -11,7 +11,7 @@ class AssignedStageController extends Controller
 {
     public function index(): Response
     {
-        return Inertia::render('mechanic/AssignedStages', [
+        return Inertia::render('technician/AssignedStages', [
             'stages' => JobStage::query()
                 ->with(['jobCard.vehicle.client', 'stage', 'delayReports'])
                 ->assignedToMechanic(request()->user())
@@ -25,7 +25,7 @@ class AssignedStageController extends Controller
     {
         $this->authorize('view', $jobStage);
 
-        return Inertia::render('mechanic/StageExecution', [
+        return Inertia::render('technician/StageExecution', [
             'jobStage' => $jobStage->load([
                 'jobCard.vehicle.client',
                 'stage',

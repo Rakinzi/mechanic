@@ -25,21 +25,21 @@ class UserSeeder extends Seeder
         $admin->assignRole('admin');
 
         collect([
-            ['name' => 'Mechanic One', 'email' => 'mechanic1@garage.test'],
-            ['name' => 'Mechanic Two', 'email' => 'mechanic2@garage.test'],
-            ['name' => 'Mechanic Three', 'email' => 'mechanic3@garage.test'],
-        ])->each(function (array $mechanicData): void {
-            $mechanic = User::query()->updateOrCreate(
-                ['email' => $mechanicData['email']],
+            ['name' => 'Technician One', 'email' => 'mechanic1@garage.test'],
+            ['name' => 'Technician Two', 'email' => 'mechanic2@garage.test'],
+            ['name' => 'Technician Three', 'email' => 'mechanic3@garage.test'],
+        ])->each(function (array $technicianData): void {
+            $technician = User::query()->updateOrCreate(
+                ['email' => $technicianData['email']],
                 [
-                    'name' => $mechanicData['name'],
+                    'name' => $technicianData['name'],
                     'password' => 'password',
                     'email_verified_at' => now(),
                     'is_active' => true,
                 ]
             );
 
-            $mechanic->assignRole('mechanic');
+            $technician->assignRole('mechanic');
         });
 
         collect([

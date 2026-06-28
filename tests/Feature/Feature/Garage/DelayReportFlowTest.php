@@ -20,15 +20,15 @@ class DelayReportFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_mechanic_can_submit_delay_report(): void
+    public function test_technician_can_submit_delay_report(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        [$mechanic, $jobStage] = $this->makeAssignedStage();
+        [$technician, $jobStage] = $this->makeAssignedStage();
 
         $service = app(DelayReportService::class);
 
-        $delayReport = $service->submit($jobStage, $mechanic, [
+        $delayReport = $service->submit($jobStage, $technician, [
             'reason_category' => DelayReasonCategory::PartsDelay->value,
             'explanation' => 'Parts are delayed by external supplier.',
             'proposed_eta' => now()->addHours(6),
@@ -42,14 +42,14 @@ class DelayReportFlowTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        [$mechanic, $jobStage] = $this->makeAssignedStage();
+        [$technician, $jobStage] = $this->makeAssignedStage();
 
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
         $delayReport = DelayReport::factory()->create([
             'job_stage_id' => $jobStage->id,
-            'submitted_by' => $mechanic->id,
+            'submitted_by' => $technician->id,
             'status' => DelayReportStatus::Pending,
             'proposed_eta' => now()->addHours(8),
         ]);
@@ -65,8 +65,8 @@ class DelayReportFlowTest extends TestCase
      */
     protected function makeAssignedStage(): array
     {
-        $mechanic = User::factory()->create();
-        $mechanic->assignRole('mechanic');
+        $technician = User::factory()->create();
+        $technician->assignRole('mechanic');
 
         $admin = User::factory()->create();
         $admin->assignRole('admin');
@@ -81,13 +81,13 @@ class DelayReportFlowTest extends TestCase
         $jobStage = JobStage::factory()->create([
             'job_card_id' => $jobCard->id,
             'stage_id' => $stage->id,
-            'assigned_mechanic_id' => $mechanic->id,
+            'assigned_mechanic_id' => $technician->id,
             'sequence' => 1,
             'status' => StageStatus::InProgress,
             'started_at' => now()->subHours(4),
             'due_at' => now()->subMinute(),
         ]);
 
-        return [$mechanic, $jobStage];
+        return [$technician, $jobStage];
     }
 }

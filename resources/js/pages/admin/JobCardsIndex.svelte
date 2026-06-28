@@ -15,14 +15,18 @@
         clients,
         vehicles,
         stages,
-        mechanics,
+        technicians,
+        admins,
+        release_stage_id,
         filters,
     }: {
         jobCards: { data: Array<Record<string, string | number | null>> };
         clients: Array<{ id: number; name: string }>;
         vehicles: Array<{ id: number; client_id: number; registration_number: string; make: string; model: string }>;
         stages: Array<{ id: number; name: string; sla_value: number; sla_unit: string }>;
-        mechanics: Array<{ id: number; name: string }>;
+        technicians: Array<{ id: number; name: string }>;
+        admins: Array<{ id: number; name: string }>;
+        release_stage_id: number | null;
         filters: {
             status?: string | null;
             client_id?: number | null;
@@ -223,10 +227,10 @@
                                     <span>{stage.name}</span>
                                 </label>
                                 <label class="space-y-1 text-sm">
-                                    <span>Technicians</span>
+                                    <span>{stage.id === release_stage_id ? 'Admin' : 'Technicians'}</span>
                                     <select name={`selected_stages[${index}][mechanic_ids][]`} multiple class="w-full rounded-md border px-3 py-2 min-h-[80px]">
-                                        {#each mechanics as mechanic (mechanic.id)}
-                                            <option value={mechanic.id}>{mechanic.name}</option>
+                                        {#each (stage.id === release_stage_id ? admins : technicians) as person (person.id)}
+                                            <option value={person.id}>{person.name}</option>
                                         {/each}
                                     </select>
                                     <span class="text-xs text-muted-foreground">Hold Ctrl/Cmd to select multiple</span>
@@ -290,10 +294,10 @@
                                         {String(jobCard.current_stage_status).replace('_', ' ')}
                                     </span>
                                 {/if}
-                                {#if jobCard.current_mechanics}
+                                {#if jobCard.current_technicians}
                                     <span class="flex items-center gap-1 truncate">
                                         <User class="size-3.5 shrink-0" />
-                                        <span class="truncate">{jobCard.current_mechanics}</span>
+                                        <span class="truncate">{jobCard.current_technicians}</span>
                                     </span>
                                 {:else if jobCard.current_stage}
                                     <span class="italic text-amber-600 dark:text-amber-400">Unassigned</span>

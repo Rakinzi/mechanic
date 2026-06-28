@@ -2,8 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Stage;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateJobStagePlanRequest extends FormRequest
 {
@@ -24,6 +25,36 @@ class UpdateJobStagePlanRequest extends FormRequest
         return true;
     }
 
+    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    {
+        $validator->after(function (\Illuminate\Validation\Validator $validator): void {
+            $jobStage = $this->route('jobStage');
+            $releaseStageId = Stage::query()->where('name', 'Release')->value('id');
+            $isReleaseStage = $jobStage && (int) $jobStage->stage_id === (int) $releaseStageId;
+
+            foreach ((array) $this->input('mechanic_ids', []) as $index => $userId) {
+                $user = User::query()->find((int) $userId);
+
+                if (! $user) {
+                    continue;
+                }
+
+                $allowed = $isReleaseStage
+                    ? $user->hasAnyRole(['mechanic', 'admin'])
+                    : $user->hasRole('mechanic');
+
+                if (! $allowed) {
+                    $validator->errors()->add(
+                        "mechanic_ids.{$index}",
+                        $isReleaseStage
+                            ? 'The selected user must be a technician or admin.'
+                            : 'The selected user must be a technician.',
+                    );
+                }
+            }
+        });
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -31,16 +62,7 @@ class UpdateJobStagePlanRequest extends FormRequest
     {
         return [
             'mechanic_ids' => ['nullable', 'array'],
-            'mechanic_ids.*' => [
-                'integer',
-                Rule::exists('users', 'id')->whereIn('id', function ($query): void {
-                    $query->select('model_id')
-                        ->from('model_has_roles')
-                        ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-                        ->where('roles.name', 'mechanic')
-                        ->where('model_has_roles.model_type', \App\Models\User::class);
-                }),
-            ],
+            'mechanic_ids.*' => ['integer', 'exists:users,id'],
             'planned_duration_value' => ['required', 'integer', 'min:1', 'max:365'],
             'planned_duration_unit' => ['required', 'in:hours,days'],
             'latest_note' => ['nullable', 'string', 'max:4000'],

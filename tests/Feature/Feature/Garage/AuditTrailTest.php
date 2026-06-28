@@ -60,8 +60,8 @@ class AuditTrailTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $mechanic = User::factory()->create();
-        $mechanic->assignRole('mechanic');
+        $technician = User::factory()->create();
+        $technician->assignRole('mechanic');
 
         $jobCard = JobCard::factory()->create([
             'created_by' => $admin->id,
@@ -77,7 +77,7 @@ class AuditTrailTest extends TestCase
         ]);
 
         $updateResponse = $this->actingAs($admin)->patch(route('admin.job-cards.stages.update', [$jobCard, $futureStage]), [
-            'assigned_mechanic_id' => $mechanic->id,
+            'assigned_mechanic_id' => $technician->id,
             'planned_duration_value' => 5,
             'planned_duration_unit' => 'hours',
             'latest_note' => 'Reassigned for specialist work.',

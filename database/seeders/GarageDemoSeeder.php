@@ -28,9 +28,9 @@ class GarageDemoSeeder extends Seeder
         $admin->assignRole('admin');
 
         $mechanics = collect([
-            ['name' => 'Mechanic One', 'email' => 'mechanic1@garage.test'],
-            ['name' => 'Mechanic Two', 'email' => 'mechanic2@garage.test'],
-            ['name' => 'Mechanic Three', 'email' => 'mechanic3@garage.test'],
+            ['name' => 'Technician One', 'email' => 'mechanic1@garage.test'],
+            ['name' => 'Technician Two', 'email' => 'mechanic2@garage.test'],
+            ['name' => 'Technician Three', 'email' => 'mechanic3@garage.test'],
         ])->map(function (array $data): User {
             $user = User::query()->firstOrCreate(
                 ['email' => $data['email']],

@@ -50,8 +50,6 @@ class JobCardService
                 ->keyBy('id');
 
             $selectedStages
-                ->sortBy(fn (array $selectedStage): int => (int) $stageTemplates->get($selectedStage['stage_id'])?->sequence)
-                ->values()
                 ->each(function (array $selectedStage, int $index) use ($jobCard, $stageTemplates, $receivedAt): void {
                     /** @var Stage $stage */
                     $stage = $stageTemplates->get($selectedStage['stage_id']);

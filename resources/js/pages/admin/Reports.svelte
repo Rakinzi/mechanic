@@ -11,7 +11,7 @@
         summary: Record<string, number>;
         analytics: {
             stage_turnaround: Array<{ stage: string; avg_hours: number }>;
-            delays_by_mechanic: Array<{ mechanic: string; delay_count: number }>;
+            delays_by_technician: Array<{ technician: string; delay_count: number }>;
             common_delay_reasons: Array<{ reason_category: string; total: number }>;
         };
     } = $props();
@@ -28,7 +28,7 @@
     };
 
     const maxTurnaround = $derived(Math.max(...analytics.stage_turnaround.map((i) => i.avg_hours), 1));
-    const maxDelays = $derived(Math.max(...analytics.delays_by_mechanic.map((i) => i.delay_count), 1));
+    const maxDelays = $derived(Math.max(...analytics.delays_by_technician.map((i) => i.delay_count), 1));
     const maxReasons = $derived(Math.max(...analytics.common_delay_reasons.map((i) => i.total), 1));
 </script>
 
@@ -70,17 +70,17 @@
             {/if}
         </div>
 
-        <!-- Delays by mechanic -->
+        <!-- Delays by technician -->
         <div class="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
-            <h2 class="mb-4 text-base font-semibold">Delays by mechanic</h2>
-            {#if analytics.delays_by_mechanic.length === 0}
+            <h2 class="mb-4 text-base font-semibold">Delays by technician</h2>
+            {#if analytics.delays_by_technician.length === 0}
                 <p class="text-sm text-muted-foreground">No data yet.</p>
             {:else}
                 <div class="space-y-3">
-                    {#each analytics.delays_by_mechanic as item (item.mechanic)}
+                    {#each analytics.delays_by_technician as item (item.technician)}
                         <div>
                             <div class="mb-1 flex items-center justify-between text-sm">
-                                <span class="font-medium">{item.mechanic}</span>
+                                <span class="font-medium">{item.technician}</span>
                                 <span class="text-muted-foreground">{item.delay_count} reports</span>
                             </div>
                             <div class="h-2 w-full overflow-hidden rounded-full bg-muted">

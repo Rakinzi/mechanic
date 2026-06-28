@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Mechanic') }}</title>
+        <title inertia>{{ config('app.name', 'Technician') }}</title>
 
         <link rel="icon" type="image/jpeg" media="(prefers-color-scheme: light)" href="/images/branding/logo-light.jpeg">
         <link rel="icon" type="image/jpeg" media="(prefers-color-scheme: dark)" href="/images/branding/logo-dark.jpeg">

@@ -196,10 +196,10 @@ class AdminUserCrudTest extends TestCase
     public function test_non_admin_cannot_manage_users(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        $mechanic = User::factory()->create();
-        $mechanic->assignRole('mechanic');
+        $technician = User::factory()->create();
+        $technician->assignRole('mechanic');
 
-        $response = $this->actingAs($mechanic)->post(route('admin.users.store'), [
+        $response = $this->actingAs($technician)->post(route('admin.users.store'), [
             'name' => 'Nope',
             'email' => 'nope@garage.test',
             'role' => 'client',
@@ -217,11 +217,11 @@ class AdminUserCrudTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $mechanic = User::factory()->create([
-            'name' => 'Target Mechanic',
-            'email' => 'target-mechanic@garage.test',
+        $technician = User::factory()->create([
+            'name' => 'Target Technician',
+            'email' => 'target-technician@garage.test',
         ]);
-        $mechanic->assignRole('mechanic');
+        $technician->assignRole('mechanic');
 
         $client = User::factory()->create([
             'name' => 'Target Client',
@@ -231,15 +231,15 @@ class AdminUserCrudTest extends TestCase
 
         $response = $this->actingAs($admin)->get(route('admin.users.index', [
             'role' => 'mechanic',
-            'search' => 'target-mechanic',
+            'search' => 'target-technician',
         ]));
 
         $response->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('admin/UserManagement')
                 ->where('filters.role', 'mechanic')
-                ->where('filters.search', 'target-mechanic')
-                ->where('users.data.0.email', 'target-mechanic@garage.test')
+                ->where('filters.search', 'target-technician')
+                ->where('users.data.0.email', 'target-technician@garage.test')
                 ->missing('users.data.1')
             );
     }

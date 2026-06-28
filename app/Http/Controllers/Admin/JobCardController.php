@@ -54,7 +54,7 @@ class JobCardController extends Controller
                         ?->stage
                         ?->name,
                     'current_stage_status' => $activeStage?->status,
-                    'current_mechanics' => $activeStage
+                    'current_technicians' => $activeStage
                         ? ($activeStage->mechanics->isNotEmpty()
                             ? $activeStage->mechanics->pluck('name')->join(', ')
                             : $activeStage->assignedMechanic?->name)
@@ -68,7 +68,7 @@ class JobCardController extends Controller
             'clients' => Client::query()->orderBy('name')->get(['id', 'name', 'email']),
             'vehicles' => Vehicle::query()->orderBy('registration_number')->get(['id', 'client_id', 'registration_number', 'make', 'model']),
             'stages' => Stage::query()->orderBy('sequence')->get(['id', 'name', 'sequence', 'sla_value', 'sla_unit']),
-            'mechanics' => User::query()->role('mechanic')->orderBy('name')->get(['id', 'name', 'email']),
+            'technicians' => User::query()->role('mechanic')->orderBy('name')->get(['id', 'name', 'email']),
             'filters' => [
                 'status' => $status,
                 'client_id' => $clientId,
@@ -97,7 +97,7 @@ class JobCardController extends Controller
                 'jobStages.delayReports.reviewer',
                 'jobStages.delayReports.media',
             ]),
-            'mechanics' => User::query()->role('mechanic')->orderBy('name')->get(['id', 'name', 'email']),
+            'technicians' => User::query()->role('mechanic')->orderBy('name')->get(['id', 'name', 'email']),
             'summaryUrl' => route('admin.job-cards.summary', $jobCard),
         ]);
     }

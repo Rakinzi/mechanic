@@ -30,7 +30,7 @@ class AdminReportingAndFiltersTest extends TestCase
                 ->component('admin/Reports')
                 ->has('summary.totalJobCards')
                 ->has('analytics.stage_turnaround')
-                ->has('analytics.delays_by_mechanic')
+                ->has('analytics.delays_by_technician')
                 ->has('analytics.common_delay_reasons')
             );
     }

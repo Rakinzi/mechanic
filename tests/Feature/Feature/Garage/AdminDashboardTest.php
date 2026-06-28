@@ -25,16 +25,16 @@ class AdminDashboardTest extends TestCase
         $response->assertOk();
     }
 
-    public function test_mechanic_cannot_access_admin_dashboard(): void
+    public function test_technician_cannot_access_admin_dashboard(): void
     {
         $this->withoutVite();
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        $mechanic = User::factory()->create();
-        $mechanic->assignRole('mechanic');
+        $technician = User::factory()->create();
+        $technician->assignRole('mechanic');
 
-        $response = $this->actingAs($mechanic)->get(route('admin.dashboard'));
+        $response = $this->actingAs($technician)->get(route('admin.dashboard'));
 
         $response->assertForbidden();
     }

@@ -39,9 +39,9 @@ class ReportController extends Controller
             ->withCount('submittedDelayReports')
             ->orderByDesc('submitted_delay_reports_count')
             ->get(['id', 'name'])
-            ->map(fn (User $mechanic): array => [
-                'mechanic' => $mechanic->name,
-                'delay_count' => $mechanic->submitted_delay_reports_count,
+            ->map(fn (User $technician): array => [
+                'technician' => $technician->name,
+                'delay_count' => $technician->submitted_delay_reports_count,
             ]);
 
         $commonDelayReasons = DelayReport::query()
@@ -64,7 +64,7 @@ class ReportController extends Controller
             ],
             'analytics' => [
                 'stage_turnaround' => $stageTurnaround,
-                'delays_by_mechanic' => $delaysByMechanic,
+                'delays_by_technician' => $delaysByMechanic,
                 'common_delay_reasons' => $commonDelayReasons,
             ],
         ]);

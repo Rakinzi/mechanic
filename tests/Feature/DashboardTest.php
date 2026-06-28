@@ -28,7 +28,7 @@ class DashboardTest extends TestCase
         $response->assertRedirect(route('admin.dashboard'));
     }
 
-    public function test_mechanics_are_redirected_to_assigned_stages_page(): void
+    public function test_technicians_are_redirected_to_assigned_stages_page(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $user = User::factory()->create();

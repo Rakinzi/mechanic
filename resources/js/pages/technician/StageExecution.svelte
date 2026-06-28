@@ -12,7 +12,7 @@
     import DelayReportModal from '@/components/DelayReportModal.svelte';
     import PhotoGallery from '@/components/PhotoGallery.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
-    import MechanicLayout from '@/layouts/MechanicLayout.svelte';
+    import TechnicianLayout from '@/layouts/TechnicianLayout.svelte';
     import { block, complete, pause, start } from '@/routes/mechanic/job-stages';
     import type { BreadcrumbItem } from '@/types';
 
@@ -58,7 +58,7 @@
 
 <AppHead title="Stage Execution" />
 
-<MechanicLayout {breadcrumbs}>
+<TechnicianLayout {breadcrumbs}>
     <!-- Stage header card -->
     <div class="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
         <div class="flex items-start justify-between gap-3">
@@ -198,4 +198,4 @@
     {/if}
 
     <DelayReportModal jobStageId={jobStage.uuid} bind:isOpen={showDelayModal} />
-</MechanicLayout>
+</TechnicianLayout>

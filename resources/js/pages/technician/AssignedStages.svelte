@@ -7,7 +7,7 @@
     import { onDestroy, onMount } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
-    import MechanicLayout from '@/layouts/MechanicLayout.svelte';
+    import TechnicianLayout from '@/layouts/TechnicianLayout.svelte';
     import { show } from '@/routes/mechanic/assigned-stages';
     import type { BreadcrumbItem } from '@/types';
 
@@ -65,7 +65,7 @@
 
 <AppHead title="My Assigned Stages" />
 
-<MechanicLayout {breadcrumbs}>
+<TechnicianLayout {breadcrumbs}>
     {#if stages.length === 0}
         <div class="rounded-xl border bg-white p-8 text-center shadow-sm dark:bg-slate-900">
             <ClipboardList class="mx-auto size-8 text-muted-foreground" />
@@ -144,4 +144,4 @@
             </details>
         {/if}
     {/if}
-</MechanicLayout>
+</TechnicianLayout>

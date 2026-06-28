@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Stage;
+use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -33,6 +35,39 @@ class IntakeJobCardRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    {
+        $validator->after(function (\Illuminate\Validation\Validator $validator): void {
+            $releaseStageId = Stage::query()->where('name', 'Release')->value('id');
+
+            foreach ($this->input('selected_stages', []) as $index => $selectedStage) {
+                $stageId = (int) data_get($selectedStage, 'stage_id');
+                $isReleaseStage = $stageId === (int) $releaseStageId;
+
+                foreach ((array) data_get($selectedStage, 'mechanic_ids', []) as $userIndex => $userId) {
+                    $user = User::query()->find((int) $userId);
+
+                    if (! $user) {
+                        continue;
+                    }
+
+                    $allowed = $isReleaseStage
+                        ? $user->hasAnyRole(['mechanic', 'admin'])
+                        : $user->hasRole('mechanic');
+
+                    if (! $allowed) {
+                        $validator->errors()->add(
+                            "selected_stages.{$index}.mechanic_ids.{$userIndex}",
+                            $isReleaseStage
+                                ? 'The selected user must be a technician or admin.'
+                                : 'The selected user must be a technician.',
+                        );
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -78,16 +113,7 @@ class IntakeJobCardRequest extends FormRequest
             'selected_stages' => ['required', 'array', 'min:1'],
             'selected_stages.*.stage_id' => ['required', 'integer', 'distinct', 'exists:stages,id'],
             'selected_stages.*.mechanic_ids' => ['nullable', 'array'],
-            'selected_stages.*.mechanic_ids.*' => [
-                'integer',
-                Rule::exists('users', 'id')->whereIn('id', function ($query): void {
-                    $query->select('model_id')
-                        ->from('model_has_roles')
-                        ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-                        ->where('roles.name', 'mechanic')
-                        ->where('model_has_roles.model_type', \App\Models\User::class);
-                }),
-            ],
+            'selected_stages.*.mechanic_ids.*' => ['integer', 'exists:users,id'],
             'selected_stages.*.planned_duration_value' => ['required', 'integer', 'min:1', 'max:365'],
             'selected_stages.*.planned_duration_unit' => ['required', 'in:hours,days'],
         ];
