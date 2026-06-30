@@ -83,7 +83,11 @@ return new class extends Migration
         $rolesTable = config('permission.table_names.roles', 'roles');
         $modelHasRolesTable = config('permission.table_names.model_has_roles', 'model_has_roles');
         $roleHasPermissionsTable = config('permission.table_names.role_has_permissions', 'role_has_permissions');
-        $rolePivotKey = config('permission.column_names.role_pivot_key', 'role_id');
+        $rolePivotKey = config('permission.column_names.role_pivot_key') ?: 'role_id';
+        $permissionPivotKey = config('permission.column_names.permission_pivot_key') ?: 'permission_id';
+        $modelMorphKey = config('permission.column_names.model_morph_key') ?: 'model_id';
+        $teams = (bool) config('permission.teams', false);
+        $teamForeignKey = config('permission.column_names.team_foreign_key') ?: 'team_id';
 
         if (! Schema::hasTable($rolesTable)) {
             return;
@@ -109,14 +113,39 @@ return new class extends Migration
         }
 
         if (Schema::hasTable($modelHasRolesTable)) {
+            $sourceAssignments = DB::table($modelHasRolesTable)
+                ->where($rolePivotKey, $sourceRole->id)
+                ->get();
+
+            foreach ($sourceAssignments as $assignment) {
+                $matchingAssignment = DB::table($modelHasRolesTable)
+                    ->where($rolePivotKey, $targetRole->id)
+                    ->where('model_type', $assignment->model_type)
+                    ->where($modelMorphKey, $assignment->{$modelMorphKey})
+                    ->when($teams, fn ($query) => $query->where($teamForeignKey, $assignment->{$teamForeignKey}))
+                    ->exists();
+
+                if (! $matchingAssignment) {
+                    $insertPayload = [
+                        $rolePivotKey => $targetRole->id,
+                        'model_type' => $assignment->model_type,
+                        $modelMorphKey => $assignment->{$modelMorphKey},
+                    ];
+
+                    if ($teams) {
+                        $insertPayload[$teamForeignKey] = $assignment->{$teamForeignKey};
+                    }
+
+                    DB::table($modelHasRolesTable)->insert($insertPayload);
+                }
+            }
+
             DB::table($modelHasRolesTable)
                 ->where($rolePivotKey, $sourceRole->id)
-                ->update([$rolePivotKey => $targetRole->id]);
+                ->delete();
         }
 
         if (Schema::hasTable($roleHasPermissionsTable)) {
-            $permissionPivotKey = config('permission.column_names.permission_pivot_key', 'permission_id');
-
             $permissionIds = DB::table($roleHasPermissionsTable)
                 ->where($rolePivotKey, $sourceRole->id)
                 ->pluck($permissionPivotKey);
