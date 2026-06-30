@@ -79,7 +79,7 @@
             planned_due_at: stage.planned_due_at,
             planned_duration_value: stage.planned_duration_value,
             planned_duration_unit: stage.planned_duration_unit,
-            assigned_mechanic: stage.assigned_mechanic,
+            assigned_technician: stage.assigned_technician,
         }))} />
     </div>
 

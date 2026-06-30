@@ -26,7 +26,7 @@ class UpdateUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:50'],
-            'role' => ['required', Rule::in(['admin', 'mechanic', 'client'])],
+            'role' => ['required', Rule::in(['admin', 'technician', 'client'])],
             'password' => ['nullable', 'string', Password::min(8)],
             'is_active' => ['sometimes', 'boolean'],
         ];

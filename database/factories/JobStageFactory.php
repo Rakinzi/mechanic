@@ -26,7 +26,7 @@ class JobStageFactory extends Factory
         return [
             'job_card_id' => JobCard::factory(),
             'stage_id' => Stage::factory(),
-            'assigned_mechanic_id' => User::factory(),
+            'assigned_technician_id' => User::factory(),
             'sequence' => 1,
             'planned_duration_value' => 4,
             'planned_duration_unit' => 'hours',

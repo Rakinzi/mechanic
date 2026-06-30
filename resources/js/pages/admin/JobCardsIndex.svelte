@@ -228,7 +228,7 @@
                                 </label>
                                 <label class="space-y-1 text-sm">
                                     <span>{stage.id === release_stage_id ? 'Admin' : 'Technicians'}</span>
-                                    <select name={`selected_stages[${index}][mechanic_ids][]`} multiple class="w-full rounded-md border px-3 py-2 min-h-[80px]">
+                                    <select name={`selected_stages[${index}][technician_ids][]`} multiple class="w-full rounded-md border px-3 py-2 min-h-[80px]">
                                         {#each (stage.id === release_stage_id ? admins : technicians) as person (person.id)}
                                             <option value={person.id}>{person.name}</option>
                                         {/each}

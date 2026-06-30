@@ -11,7 +11,7 @@ class UpdateJobStagePlanRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'mechanic_ids' => collect((array) $this->input('mechanic_ids', []))
+            'technician_ids' => collect((array) $this->input('technician_ids', []))
                 ->filter()
                 ->map(fn ($id): int => (int) $id)
                 ->values()
@@ -32,7 +32,7 @@ class UpdateJobStagePlanRequest extends FormRequest
             $releaseStageId = Stage::query()->where('name', 'Release')->value('id');
             $isReleaseStage = $jobStage && (int) $jobStage->stage_id === (int) $releaseStageId;
 
-            foreach ((array) $this->input('mechanic_ids', []) as $index => $userId) {
+            foreach ((array) $this->input('technician_ids', []) as $index => $userId) {
                 $user = User::query()->find((int) $userId);
 
                 if (! $user) {
@@ -40,12 +40,12 @@ class UpdateJobStagePlanRequest extends FormRequest
                 }
 
                 $allowed = $isReleaseStage
-                    ? $user->hasAnyRole(['mechanic', 'admin'])
-                    : $user->hasRole('mechanic');
+                    ? $user->hasAnyRole(['technician', 'admin'])
+                    : $user->hasRole('technician');
 
                 if (! $allowed) {
                     $validator->errors()->add(
-                        "mechanic_ids.{$index}",
+                        "technician_ids.{$index}",
                         $isReleaseStage
                             ? 'The selected user must be a technician or admin.'
                             : 'The selected user must be a technician.',
@@ -61,8 +61,8 @@ class UpdateJobStagePlanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'mechanic_ids' => ['nullable', 'array'],
-            'mechanic_ids.*' => ['integer', 'exists:users,id'],
+            'technician_ids' => ['nullable', 'array'],
+            'technician_ids.*' => ['integer', 'exists:users,id'],
             'planned_duration_value' => ['required', 'integer', 'min:1', 'max:365'],
             'planned_duration_unit' => ['required', 'in:hours,days'],
             'latest_note' => ['nullable', 'string', 'max:4000'],

@@ -51,7 +51,7 @@ class AppServiceProvider extends ServiceProvider
             'submit delay reports',
             'view own repairs',
         ],
-        'mechanic' => [
+        'technician' => [
             'view assigned stages',
             'run stage actions',
             'submit delay reports',

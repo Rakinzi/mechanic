@@ -9,7 +9,7 @@ class JobCardPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'mechanic', 'client']);
+        return $user->hasAnyRole(['admin', 'technician', 'client']);
     }
 
     public function view(User $user, JobCard $jobCard): bool
@@ -18,8 +18,8 @@ class JobCardPolicy
             return true;
         }
 
-        if ($user->hasRole('mechanic')) {
-            return $jobCard->jobStages()->assignedToMechanic($user)->exists();
+        if ($user->hasRole('technician')) {
+            return $jobCard->jobStages()->assignedToTechnician($user)->exists();
         }
 
         if ($user->hasRole('client')) {

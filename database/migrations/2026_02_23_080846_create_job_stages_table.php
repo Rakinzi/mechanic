@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('job_card_id')->constrained()->cascadeOnDelete();
             $table->foreignId('stage_id')->constrained()->restrictOnDelete();
-            $table->foreignId('assigned_mechanic_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('assigned_technician_id')->nullable()->constrained('users')->nullOnDelete();
             $table->unsignedInteger('sequence');
             $table->string('status')->default('NOT_STARTED');
             $table->timestamp('started_at')->nullable();
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['job_card_id', 'sequence']);
-            $table->index(['assigned_mechanic_id', 'status', 'due_at']);
+            $table->index(['assigned_technician_id', 'status', 'due_at']);
             $table->index(['job_card_id', 'status']);
         });
     }

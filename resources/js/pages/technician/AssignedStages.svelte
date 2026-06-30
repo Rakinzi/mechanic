@@ -8,12 +8,12 @@
     import AppHead from '@/components/AppHead.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
     import TechnicianLayout from '@/layouts/TechnicianLayout.svelte';
-    import { show } from '@/routes/mechanic/assigned-stages';
+    import { show } from '@/routes/technician/assigned-stages';
     import type { BreadcrumbItem } from '@/types';
 
     let { stages }: { stages: any[] } = $props();
 
-    const breadcrumbs: BreadcrumbItem[] = [{ title: 'Assigned Stages', href: '/mechanic/assigned-stages' }];
+    const breadcrumbs: BreadcrumbItem[] = [{ title: 'Assigned Stages', href: '/technician/assigned-stages' }];
 
     let pollInterval: ReturnType<typeof setInterval> | null = null;
 

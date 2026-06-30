@@ -32,11 +32,11 @@ class DashboardTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $user = User::factory()->create();
-        $user->assignRole('mechanic');
+        $user->assignRole('technician');
         $this->actingAs($user);
 
         $response = $this->get(route('dashboard'));
-        $response->assertRedirect(route('mechanic.assigned-stages.index'));
+        $response->assertRedirect(route('technician.assigned-stages.index'));
     }
 
     public function test_clients_are_redirected_to_repairs_page(): void

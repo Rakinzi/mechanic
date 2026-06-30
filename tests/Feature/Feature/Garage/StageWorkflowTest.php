@@ -76,16 +76,16 @@ class StageWorkflowTest extends TestCase
         [$primaryTechnician, $secondaryTechnician, $jobStage] = $this->makeSharedAssignedStage();
 
         $this->actingAs($secondaryTechnician)
-            ->get(route('mechanic.assigned-stages.index'))
+            ->get(route('technician.assigned-stages.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('technician/AssignedStages')
                 ->where('stages.0.uuid', $jobStage->uuid)
-                ->where('stages.0.assigned_mechanic_id', $primaryTechnician->id)
+                ->where('stages.0.assigned_technician_id', $primaryTechnician->id)
             );
 
         $this->actingAs($secondaryTechnician)
-            ->get(route('mechanic.assigned-stages.show', $jobStage))
+            ->get(route('technician.assigned-stages.show', $jobStage))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('technician/StageExecution')
@@ -93,7 +93,7 @@ class StageWorkflowTest extends TestCase
             );
 
         $this->actingAs($secondaryTechnician)
-            ->post(route('mechanic.job-stages.start', $jobStage))
+            ->post(route('technician.job-stages.start', $jobStage))
             ->assertRedirect()
             ->assertSessionHas('success', 'Stage started successfully.');
 
@@ -105,7 +105,7 @@ class StageWorkflowTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $technician = User::factory()->create();
-        $technician->assignRole('mechanic');
+        $technician->assignRole('technician');
 
         $admin = User::factory()->create();
         $admin->assignRole('admin');
@@ -119,7 +119,7 @@ class StageWorkflowTest extends TestCase
         JobStage::factory()->create([
             'job_card_id' => $jobCard->id,
             'stage_id' => Stage::factory()->create(['sequence' => 101, 'name' => 'Workflow Test Stage 101'])->id,
-            'assigned_mechanic_id' => $technician->id,
+            'assigned_technician_id' => $technician->id,
             'sequence' => 1,
             'status' => StageStatus::NotStarted,
         ]);
@@ -127,17 +127,17 @@ class StageWorkflowTest extends TestCase
         $blockedStage = JobStage::factory()->create([
             'job_card_id' => $jobCard->id,
             'stage_id' => Stage::factory()->create(['sequence' => 102, 'name' => 'Workflow Test Stage 102'])->id,
-            'assigned_mechanic_id' => $technician->id,
+            'assigned_technician_id' => $technician->id,
             'sequence' => 2,
             'status' => StageStatus::NotStarted,
         ]);
 
-        $blockedStage->mechanics()->sync([$technician->id]);
+        $blockedStage->technicians()->sync([$technician->id]);
 
         $this->actingAs($technician)
-            ->from(route('mechanic.assigned-stages.show', $blockedStage))
-            ->post(route('mechanic.job-stages.start', $blockedStage))
-            ->assertRedirect(route('mechanic.assigned-stages.show', $blockedStage))
+            ->from(route('technician.assigned-stages.show', $blockedStage))
+            ->post(route('technician.job-stages.start', $blockedStage))
+            ->assertRedirect(route('technician.assigned-stages.show', $blockedStage))
             ->assertSessionHasErrors(['stage' => 'Previous stage must be completed first.']);
 
         $this->assertEquals(StageStatus::NotStarted, $blockedStage->fresh()->status);
@@ -149,7 +149,7 @@ class StageWorkflowTest extends TestCase
     protected function makeOverdueAssignedStage(StageStatus $status = StageStatus::Overdue): array
     {
         $technician = User::factory()->create();
-        $technician->assignRole('mechanic');
+        $technician->assignRole('technician');
 
         $admin = User::factory()->create();
         $admin->assignRole('admin');
@@ -164,7 +164,7 @@ class StageWorkflowTest extends TestCase
         $jobStage = JobStage::factory()->create([
             'job_card_id' => $jobCard->id,
             'stage_id' => $stage->id,
-            'assigned_mechanic_id' => $technician->id,
+            'assigned_technician_id' => $technician->id,
             'sequence' => 1,
             'status' => $status,
             'started_at' => now()->subDay(),
@@ -180,10 +180,10 @@ class StageWorkflowTest extends TestCase
     protected function makeSharedAssignedStage(): array
     {
         $primaryTechnician = User::factory()->create();
-        $primaryTechnician->assignRole('mechanic');
+        $primaryTechnician->assignRole('technician');
 
         $secondaryTechnician = User::factory()->create();
-        $secondaryTechnician->assignRole('mechanic');
+        $secondaryTechnician->assignRole('technician');
 
         $admin = User::factory()->create();
         $admin->assignRole('admin');
@@ -197,12 +197,12 @@ class StageWorkflowTest extends TestCase
         $jobStage = JobStage::factory()->create([
             'job_card_id' => $jobCard->id,
             'stage_id' => Stage::factory()->create(['sequence' => 103, 'name' => 'Workflow Test Stage 103'])->id,
-            'assigned_mechanic_id' => $primaryTechnician->id,
+            'assigned_technician_id' => $primaryTechnician->id,
             'sequence' => 1,
             'status' => StageStatus::NotStarted,
         ]);
 
-        $jobStage->mechanics()->sync([$primaryTechnician->id, $secondaryTechnician->id]);
+        $jobStage->technicians()->sync([$primaryTechnician->id, $secondaryTechnician->id]);
 
         return [$primaryTechnician, $secondaryTechnician, $jobStage];
     }

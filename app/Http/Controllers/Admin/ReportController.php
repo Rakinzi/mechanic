@@ -34,8 +34,8 @@ class ReportController extends Controller
                 ),
             ]);
 
-        $delaysByMechanic = User::query()
-            ->role('mechanic')
+        $delaysByTechnician = User::query()
+            ->role('technician')
             ->withCount('submittedDelayReports')
             ->orderByDesc('submitted_delay_reports_count')
             ->get(['id', 'name'])
@@ -64,7 +64,7 @@ class ReportController extends Controller
             ],
             'analytics' => [
                 'stage_turnaround' => $stageTurnaround,
-                'delays_by_technician' => $delaysByMechanic,
+                'delays_by_technician' => $delaysByTechnician,
                 'common_delay_reasons' => $commonDelayReasons,
             ],
         ]);

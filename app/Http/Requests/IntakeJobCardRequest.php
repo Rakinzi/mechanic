@@ -16,7 +16,7 @@ class IntakeJobCardRequest extends FormRequest
             ->filter(fn (mixed $stage): bool => filled(data_get($stage, 'enabled')) && filled(data_get($stage, 'stage_id')))
             ->map(fn (mixed $stage): array => [
                 'stage_id' => (int) data_get($stage, 'stage_id'),
-                'mechanic_ids' => collect((array) data_get($stage, 'mechanic_ids', []))
+                'technician_ids' => collect((array) data_get($stage, 'technician_ids', []))
                     ->filter()
                     ->map(fn ($id): int => (int) $id)
                     ->values()
@@ -46,7 +46,7 @@ class IntakeJobCardRequest extends FormRequest
                 $stageId = (int) data_get($selectedStage, 'stage_id');
                 $isReleaseStage = $stageId === (int) $releaseStageId;
 
-                foreach ((array) data_get($selectedStage, 'mechanic_ids', []) as $userIndex => $userId) {
+                foreach ((array) data_get($selectedStage, 'technician_ids', []) as $userIndex => $userId) {
                     $user = User::query()->find((int) $userId);
 
                     if (! $user) {
@@ -54,12 +54,12 @@ class IntakeJobCardRequest extends FormRequest
                     }
 
                     $allowed = $isReleaseStage
-                        ? $user->hasAnyRole(['mechanic', 'admin'])
-                        : $user->hasRole('mechanic');
+                        ? $user->hasAnyRole(['technician', 'admin'])
+                        : $user->hasRole('technician');
 
                     if (! $allowed) {
                         $validator->errors()->add(
-                            "selected_stages.{$index}.mechanic_ids.{$userIndex}",
+                            "selected_stages.{$index}.technician_ids.{$userIndex}",
                             $isReleaseStage
                                 ? 'The selected user must be a technician or admin.'
                                 : 'The selected user must be a technician.',
@@ -112,8 +112,8 @@ class IntakeJobCardRequest extends FormRequest
             'promised_delivery_at' => ['nullable', 'date', 'after_or_equal:today'],
             'selected_stages' => ['required', 'array', 'min:1'],
             'selected_stages.*.stage_id' => ['required', 'integer', 'distinct', 'exists:stages,id'],
-            'selected_stages.*.mechanic_ids' => ['nullable', 'array'],
-            'selected_stages.*.mechanic_ids.*' => ['integer', 'exists:users,id'],
+            'selected_stages.*.technician_ids' => ['nullable', 'array'],
+            'selected_stages.*.technician_ids.*' => ['integer', 'exists:users,id'],
             'selected_stages.*.planned_duration_value' => ['required', 'integer', 'min:1', 'max:365'],
             'selected_stages.*.planned_duration_unit' => ['required', 'in:hours,days'],
         ];

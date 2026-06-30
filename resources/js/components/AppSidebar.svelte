@@ -30,7 +30,7 @@
     import { index as adminUsers } from '@/routes/admin/users';
     import { index as clientRepairs } from '@/routes/client/repairs';
     import { index as clientVehicles } from '@/routes/client/vehicles';
-    import { index as technicianAssignedStages } from '@/routes/mechanic/assigned-stages';
+    import { index as technicianAssignedStages } from '@/routes/technician/assigned-stages';
     import type { NavItem } from '@/types';
 
     let {
@@ -51,7 +51,7 @@
                 { title: 'Users', href: adminUsers(), icon: Users },
                 { title: 'Reports', href: adminReports(), icon: LayoutGrid },
             ]
-            : userRoles.includes('mechanic')
+            : userRoles.includes('technician')
               ? [
                     { title: 'Dashboard', href: dashboard(), icon: Gauge },
                     { title: 'My Stages', href: technicianAssignedStages(), icon: Wrench },

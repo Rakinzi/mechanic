@@ -66,7 +66,7 @@ class DelayReportFlowTest extends TestCase
     protected function makeAssignedStage(): array
     {
         $technician = User::factory()->create();
-        $technician->assignRole('mechanic');
+        $technician->assignRole('technician');
 
         $admin = User::factory()->create();
         $admin->assignRole('admin');
@@ -81,7 +81,7 @@ class DelayReportFlowTest extends TestCase
         $jobStage = JobStage::factory()->create([
             'job_card_id' => $jobCard->id,
             'stage_id' => $stage->id,
-            'assigned_mechanic_id' => $technician->id,
+            'assigned_technician_id' => $technician->id,
             'sequence' => 1,
             'status' => StageStatus::InProgress,
             'started_at' => now()->subHours(4),

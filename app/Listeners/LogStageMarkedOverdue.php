@@ -15,8 +15,8 @@ class LogStageMarkedOverdue
 
         Notification::send($admins, new StageOverdueNotification($event->jobStage));
 
-        if ($event->jobStage->assignedMechanic !== null) {
-            $event->jobStage->assignedMechanic->notify(new StageOverdueNotification($event->jobStage));
+        if ($event->jobStage->assignedTechnician !== null) {
+            $event->jobStage->assignedTechnician->notify(new StageOverdueNotification($event->jobStage));
         }
     }
 }

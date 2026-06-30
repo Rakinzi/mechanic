@@ -4,6 +4,7 @@ namespace Tests\Feature\Feature\Garage;
 
 use App\Models\Client;
 use App\Models\JobCard;
+use App\Models\JobStage;
 use App\Models\Stage;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -62,6 +63,33 @@ class JobCardSummaryDownloadTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_summary_uses_job_stage_sequence_order_when_printing(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        [$admin, $jobCard] = $this->makeJobCardFixture();
+        $admin->assignRole('admin');
+
+        $panelBeating = Stage::query()->where('name', 'Panel Beating')->firstOrFail();
+        $technicians = Stage::query()->where('name', 'Technicians')->firstOrFail();
+
+        JobStage::factory()->create([
+            'job_card_id' => $jobCard->id,
+            'stage_id' => $technicians->id,
+            'sequence' => 1,
+        ]);
+
+        JobStage::factory()->create([
+            'job_card_id' => $jobCard->id,
+            'stage_id' => $panelBeating->id,
+            'sequence' => 2,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.job-cards.summary', $jobCard));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Technicians', 'Panel Beating']);
+    }
+
     /**
      * @return array{0: User, 1: JobCard}
      */
@@ -76,7 +104,7 @@ class JobCardSummaryDownloadTest extends TestCase
         ]);
 
         Stage::query()->where('name', 'Panel Beating')->firstOrFail();
-        Stage::query()->where('name', 'Mechanics')->firstOrFail();
+        Stage::query()->where('name', 'Technicians')->firstOrFail();
 
         return [$admin, $jobCard];
     }

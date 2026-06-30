@@ -54,19 +54,19 @@ class JobCardService
                     /** @var Stage $stage */
                     $stage = $stageTemplates->get($selectedStage['stage_id']);
 
-                    $mechanicIds = collect($selectedStage['mechanic_ids'] ?? [])
+                    $technicianIds = collect($selectedStage['technician_ids'] ?? [])
                         ->filter()
                         ->map(fn ($id) => (int) $id)
                         ->unique()
                         ->values()
                         ->all();
 
-                    $primaryMechanicId = $mechanicIds[0] ?? null;
+                    $primaryTechnicianId = $technicianIds[0] ?? null;
 
                     /** @var JobStage $jobStage */
                     $jobStage = $jobCard->jobStages()->create([
                         'stage_id' => $stage->id,
-                        'assigned_mechanic_id' => $primaryMechanicId,
+                        'assigned_technician_id' => $primaryTechnicianId,
                         'sequence' => $index + 1,
                         'planned_duration_value' => $selectedStage['planned_duration_value'],
                         'planned_duration_unit' => $selectedStage['planned_duration_unit'],
@@ -75,8 +75,8 @@ class JobCardService
                         'last_status_changed_at' => now(),
                     ]);
 
-                    if (! empty($mechanicIds)) {
-                        $jobStage->mechanics()->sync($mechanicIds);
+                    if (! empty($technicianIds)) {
+                        $jobStage->technicians()->sync($technicianIds);
                     }
                 });
 
@@ -99,7 +99,7 @@ class JobCardService
             return $jobCard;
         });
 
-        return $jobCard->load(['vehicle.client', 'currentJobStage.stage', 'jobStages.stage', 'jobStages.assignedMechanic', 'jobStages.mechanics']);
+        return $jobCard->load(['vehicle.client', 'currentJobStage.stage', 'jobStages.stage', 'jobStages.assignedTechnician', 'jobStages.technicians']);
     }
 
     /**
@@ -111,18 +111,18 @@ class JobCardService
             throw new RuntimeException('Only future stages can be edited.');
         }
 
-        $mechanicIds = collect(Arr::get($payload, 'mechanic_ids', []))
+        $technicianIds = collect(Arr::get($payload, 'technician_ids', []))
             ->filter()
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values()
             ->all();
 
-        $primaryMechanicId = $mechanicIds[0] ?? null;
+        $primaryTechnicianId = $technicianIds[0] ?? null;
 
-        DB::transaction(function () use ($jobStage, $payload, $mechanicIds, $primaryMechanicId): void {
+        DB::transaction(function () use ($jobStage, $payload, $technicianIds, $primaryTechnicianId): void {
             $jobStage->forceFill([
-                'assigned_mechanic_id' => $primaryMechanicId,
+                'assigned_technician_id' => $primaryTechnicianId,
                 'planned_duration_value' => Arr::get($payload, 'planned_duration_value'),
                 'planned_duration_unit' => Arr::get($payload, 'planned_duration_unit'),
                 'planned_due_at' => $this->calculatePlannedDueAt(
@@ -134,7 +134,7 @@ class JobCardService
                 'last_status_changed_at' => now(),
             ])->save();
 
-            $jobStage->mechanics()->sync($mechanicIds);
+            $jobStage->technicians()->sync($technicianIds);
         });
 
         $this->jobCardAuditService->record(
@@ -144,8 +144,8 @@ class JobCardService
             $actor,
             $jobStage,
             [
-                'assigned_mechanic_id' => $jobStage->assigned_mechanic_id,
-                'mechanic_ids' => $mechanicIds,
+                'assigned_technician_id' => $jobStage->assigned_technician_id,
+                'technician_ids' => $technicianIds,
                 'planned_duration_value' => $jobStage->planned_duration_value,
                 'planned_duration_unit' => $jobStage->planned_duration_unit,
                 'planned_due_at' => $jobStage->planned_due_at?->toDateTimeString(),
@@ -153,7 +153,7 @@ class JobCardService
             ],
         );
 
-        return $jobStage->fresh(['stage', 'assignedMechanic', 'mechanics']);
+        return $jobStage->fresh(['stage', 'assignedTechnician', 'technicians']);
     }
 
     protected function calculatePlannedDueAt(Carbon|string $baseTime, int $value, string $unit): Carbon

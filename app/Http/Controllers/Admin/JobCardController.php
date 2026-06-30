@@ -33,7 +33,7 @@ class JobCardController extends Controller
         $overdueOnly = $request->boolean('overdue_only');
 
         $jobCards = JobCard::query()
-            ->with(['vehicle.client', 'jobStages.stage', 'jobStages.assignedMechanic', 'jobStages.mechanics'])
+            ->with(['vehicle.client', 'jobStages.stage', 'jobStages.assignedTechnician', 'jobStages.technicians'])
             ->withCount(['jobStages as pending_delay_reports_count' => fn ($query) => $query->join('delay_reports', 'delay_reports.job_stage_id', '=', 'job_stages.id')->where('delay_reports.status', 'PENDING')])
             ->when($status, fn ($query) => $query->where('status', $status))
             ->when($clientId, fn ($query) => $query->whereHas('vehicle.client', fn ($clientQuery) => $clientQuery->whereKey($clientId)))
@@ -55,9 +55,9 @@ class JobCardController extends Controller
                         ?->name,
                     'current_stage_status' => $activeStage?->status,
                     'current_technicians' => $activeStage
-                        ? ($activeStage->mechanics->isNotEmpty()
-                            ? $activeStage->mechanics->pluck('name')->join(', ')
-                            : $activeStage->assignedMechanic?->name)
+                        ? ($activeStage->technicians->isNotEmpty()
+                            ? $activeStage->technicians->pluck('name')->join(', ')
+                            : $activeStage->assignedTechnician?->name)
                         : null,
                     'vehicle' => $jobCard->vehicle->make.' '.$jobCard->vehicle->model,
                     'registration_number' => $jobCard->vehicle->registration_number,
@@ -68,7 +68,7 @@ class JobCardController extends Controller
             'clients' => Client::query()->orderBy('name')->get(['id', 'name', 'email']),
             'vehicles' => Vehicle::query()->orderBy('registration_number')->get(['id', 'client_id', 'registration_number', 'make', 'model']),
             'stages' => Stage::query()->orderBy('sequence')->get(['id', 'name', 'sequence', 'sla_value', 'sla_unit']),
-            'technicians' => User::query()->role('mechanic')->orderBy('name')->get(['id', 'name', 'email']),
+            'technicians' => User::query()->role('technician')->orderBy('name')->get(['id', 'name', 'email']),
             'filters' => [
                 'status' => $status,
                 'client_id' => $clientId,
@@ -90,14 +90,14 @@ class JobCardController extends Controller
                 'audits.actor',
                 'audits.jobStage.stage',
                 'jobStages.stage',
-                'jobStages.assignedMechanic',
-                'jobStages.mechanics',
+                'jobStages.assignedTechnician',
+                'jobStages.technicians',
                 'jobStages.logs.actor',
                 'jobStages.delayReports.submitter',
                 'jobStages.delayReports.reviewer',
                 'jobStages.delayReports.media',
             ]),
-            'technicians' => User::query()->role('mechanic')->orderBy('name')->get(['id', 'name', 'email']),
+            'technicians' => User::query()->role('technician')->orderBy('name')->get(['id', 'name', 'email']),
             'summaryUrl' => route('admin.job-cards.summary', $jobCard),
         ]);
     }

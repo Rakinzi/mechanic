@@ -19,7 +19,7 @@ class GarageStageCatalogTest extends TestCase
 
         $this->assertSame([
             'Panel Beating',
-            'Mechanics',
+            'Technicians',
             'Spraypainting',
             'Buffing',
             'Carwash',

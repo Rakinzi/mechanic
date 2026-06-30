@@ -29,7 +29,7 @@ class RepairController extends Controller
                 'vehicle',
                 'currentJobStage.stage',
                 'jobStages.stage',
-                'jobStages.assignedMechanic',
+                'jobStages.assignedTechnician',
                 'jobStages.delayReports',
                 'jobStages.logs.actor',
                 'jobStages.media',

@@ -41,7 +41,7 @@ class JobStage extends Model implements HasMedia
     protected $fillable = [
         'job_card_id',
         'stage_id',
-        'assigned_mechanic_id',
+        'assigned_technician_id',
         'sequence',
         'planned_duration_value',
         'planned_duration_unit',
@@ -91,42 +91,42 @@ class JobStage extends Model implements HasMedia
         return $this->belongsTo(Stage::class);
     }
 
-    public function assignedMechanic(): BelongsTo
+    public function assignedTechnician(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_mechanic_id');
+        return $this->belongsTo(User::class, 'assigned_technician_id');
     }
 
-    public function mechanics(): BelongsToMany
+    public function technicians(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'job_stage_mechanics')->withTimestamps();
+        return $this->belongsToMany(User::class, 'job_stage_technicians')->withTimestamps();
     }
 
-    public function scopeAssignedToMechanic(Builder $query, User|int $mechanic): Builder
+    public function scopeAssignedToTechnician(Builder $query, User|int $technician): Builder
     {
-        $mechanicId = $mechanic instanceof User ? $mechanic->getKey() : $mechanic;
+        $technicianId = $technician instanceof User ? $technician->getKey() : $technician;
 
-        return $query->where(function (Builder $builder) use ($mechanicId): void {
+        return $query->where(function (Builder $builder) use ($technicianId): void {
             $builder
-                ->where('assigned_mechanic_id', $mechanicId)
-                ->orWhereHas('mechanics', function (Builder $mechanicsQuery) use ($mechanicId): void {
-                    $mechanicsQuery->whereKey($mechanicId);
+                ->where('assigned_technician_id', $technicianId)
+                ->orWhereHas('technicians', function (Builder $techniciansQuery) use ($technicianId): void {
+                    $techniciansQuery->whereKey($technicianId);
                 });
         });
     }
 
-    public function isAssignedToMechanic(User|int $mechanic): bool
+    public function isAssignedToTechnician(User|int $technician): bool
     {
-        $mechanicId = $mechanic instanceof User ? $mechanic->getKey() : $mechanic;
+        $technicianId = $technician instanceof User ? $technician->getKey() : $technician;
 
-        if ($this->assigned_mechanic_id === $mechanicId) {
+        if ($this->assigned_technician_id === $technicianId) {
             return true;
         }
 
-        if ($this->relationLoaded('mechanics')) {
-            return $this->mechanics->contains('id', $mechanicId);
+        if ($this->relationLoaded('technicians')) {
+            return $this->technicians->contains('id', $technicianId);
         }
 
-        return $this->mechanics()->whereKey($mechanicId)->exists();
+        return $this->technicians()->whereKey($technicianId)->exists();
     }
 
     public function logs(): HasMany

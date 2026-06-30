@@ -13,7 +13,7 @@
     import PhotoGallery from '@/components/PhotoGallery.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
     import TechnicianLayout from '@/layouts/TechnicianLayout.svelte';
-    import { block, complete, pause, start } from '@/routes/mechanic/job-stages';
+    import { block, complete, pause, start } from '@/routes/technician/job-stages';
     import type { BreadcrumbItem } from '@/types';
 
     let { jobStage }: { jobStage: any } = $props();
@@ -21,8 +21,8 @@
     let showDelayModal = $state(false);
 
     const breadcrumbs = $derived<BreadcrumbItem[]>([
-        { title: 'Assigned Stages', href: '/mechanic/assigned-stages' },
-        { title: `${jobStage.stage.name} — ${jobStage.job_card.job_number}`, href: `/mechanic/assigned-stages/${jobStage.uuid}` },
+        { title: 'Assigned Stages', href: '/technician/assigned-stages' },
+        { title: `${jobStage.stage.name} — ${jobStage.job_card.job_number}`, href: `/technician/assigned-stages/${jobStage.uuid}` },
     ]);
 
     const isNotStarted = $derived(jobStage.status === 'NOT_STARTED');

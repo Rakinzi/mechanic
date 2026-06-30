@@ -48,7 +48,7 @@ class UserManagementController extends Controller
                 'is_active' => $user->is_active,
                 'roles' => $user->roles->pluck('name')->values(),
             ]),
-            'roles' => ['admin', 'mechanic', 'client'],
+            'roles' => ['admin', 'technician', 'client'],
             'filters' => [
                 'search' => $search,
                 'role' => $role,

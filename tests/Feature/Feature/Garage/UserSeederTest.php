@@ -18,7 +18,7 @@ class UserSeederTest extends TestCase
         $this->seed(UserSeeder::class);
 
         $this->assertTrue(User::query()->where('email', 'admin@garage.test')->firstOrFail()->hasRole('admin'));
-        $this->assertCount(3, User::query()->role('mechanic')->get());
+        $this->assertCount(3, User::query()->role('technician')->get());
         $this->assertCount(3, User::query()->role('client')->get());
     }
 }

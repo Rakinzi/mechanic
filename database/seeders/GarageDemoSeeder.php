@@ -27,23 +27,23 @@ class GarageDemoSeeder extends Seeder
         );
         $admin->assignRole('admin');
 
-        $mechanics = collect([
-            ['name' => 'Technician One', 'email' => 'mechanic1@garage.test'],
-            ['name' => 'Technician Two', 'email' => 'mechanic2@garage.test'],
-            ['name' => 'Technician Three', 'email' => 'mechanic3@garage.test'],
+        $technicians = collect([
+            ['name' => 'Technician One', 'email' => 'technician1@garage.test'],
+            ['name' => 'Technician Two', 'email' => 'technician2@garage.test'],
+            ['name' => 'Technician Three', 'email' => 'technician3@garage.test'],
         ])->map(function (array $data): User {
             $user = User::query()->firstOrCreate(
                 ['email' => $data['email']],
                 ['name' => $data['name'], 'password' => 'password', 'email_verified_at' => now()]
             );
-            $user->assignRole('mechanic');
+            $user->assignRole('technician');
 
             return $user;
         });
 
         $defaultStages = [
             ['name' => 'Panel Beating', 'sequence' => 1, 'sla_value' => 12, 'sla_unit' => 'hours'],
-            ['name' => 'Mechanics', 'sequence' => 2, 'sla_value' => 8, 'sla_unit' => 'hours'],
+            ['name' => 'Technicians', 'sequence' => 2, 'sla_value' => 8, 'sla_unit' => 'hours'],
             ['name' => 'Spraypainting', 'sequence' => 3, 'sla_value' => 10, 'sla_unit' => 'hours'],
             ['name' => 'Buffing', 'sequence' => 4, 'sla_value' => 4, 'sla_unit' => 'hours'],
             ['name' => 'Carwash', 'sequence' => 5, 'sla_value' => 2, 'sla_unit' => 'hours'],
@@ -55,7 +55,7 @@ class GarageDemoSeeder extends Seeder
             Stage::query()->updateOrCreate(['name' => $stage['name']], $stage + ['is_active' => true]);
         }
 
-        Client::factory()->count(3)->create()->each(function (Client $client) use ($mechanics, $admin): void {
+        Client::factory()->count(3)->create()->each(function (Client $client) use ($technicians, $admin): void {
             $clientUser = User::factory()->create([
                 'name' => $client->name,
                 'email' => $client->email,
@@ -76,14 +76,14 @@ class GarageDemoSeeder extends Seeder
                 'status' => 'OPEN',
             ]);
 
-            $this->createJobStages($jobCard, $mechanics);
+            $this->createJobStages($jobCard, $technicians);
         });
     }
 
     /**
-     * @param  Collection<int, User>  $mechanics
+     * @param  Collection<int, User>  $technicians
      */
-    protected function createJobStages(JobCard $jobCard, Collection $mechanics): void
+    protected function createJobStages(JobCard $jobCard, Collection $technicians): void
     {
         $stages = Stage::query()->where('is_active', true)->orderBy('sequence')->get();
 
@@ -108,7 +108,7 @@ class GarageDemoSeeder extends Seeder
 
             $jobStage = $jobCard->jobStages()->create([
                 'stage_id' => $stage->id,
-                'assigned_mechanic_id' => $mechanics->random()->id,
+                'assigned_technician_id' => $technicians->random()->id,
                 'sequence' => $stage->sequence,
                 'status' => $status,
                 'started_at' => $startedAt,
@@ -120,7 +120,7 @@ class GarageDemoSeeder extends Seeder
             if ($status === StageStatus::Overdue) {
                 DelayReport::query()->create([
                     'job_stage_id' => $jobStage->id,
-                    'submitted_by' => $jobStage->assigned_mechanic_id,
+                    'submitted_by' => $jobStage->assigned_technician_id,
                     'reason_category' => DelayReasonCategory::PartsDelay,
                     'explanation' => 'Awaiting parts delivery from supplier warehouse.',
                     'proposed_eta' => now()->addHours(6),

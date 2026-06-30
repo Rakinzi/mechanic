@@ -34,7 +34,7 @@ class MarkOverdueStages extends Command
     public function handle(): int
     {
         $stages = JobStage::query()
-            ->with(['stage', 'jobCard.vehicle.client.user', 'assignedMechanic'])
+            ->with(['stage', 'jobCard.vehicle.client.user', 'assignedTechnician'])
             ->whereIn('status', [StageStatus::InProgress->value, StageStatus::Blocked->value])
             ->whereNotNull('due_at')
             ->where('due_at', '<', now())

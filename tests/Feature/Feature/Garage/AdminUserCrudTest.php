@@ -23,7 +23,7 @@ class AdminUserCrudTest extends TestCase
             'name' => 'Created User',
             'email' => 'created-user@garage.test',
             'phone' => '1234567890',
-            'role' => 'mechanic',
+            'role' => 'technician',
             'password' => 'password123',
             'is_active' => true,
         ]);
@@ -35,7 +35,7 @@ class AdminUserCrudTest extends TestCase
         ]);
 
         $created = User::query()->where('email', 'created-user@garage.test')->firstOrFail();
-        $this->assertTrue($created->hasRole('mechanic'));
+        $this->assertTrue($created->hasRole('technician'));
     }
 
     public function test_admin_creating_client_role_user_also_creates_client_record(): void
@@ -98,7 +98,7 @@ class AdminUserCrudTest extends TestCase
         $admin->assignRole('admin');
 
         $target = User::factory()->create(['name' => 'Promoted User', 'email' => 'promoted@garage.test']);
-        $target->assignRole('mechanic');
+        $target->assignRole('technician');
 
         $this->assertDatabaseMissing('clients', ['user_id' => $target->id]);
 
@@ -159,7 +159,7 @@ class AdminUserCrudTest extends TestCase
             'name' => 'After Name',
             'email' => 'after@garage.test',
             'phone' => '9999999999',
-            'role' => 'mechanic',
+            'role' => 'technician',
             'password' => '',
             'is_active' => false,
         ]);
@@ -171,7 +171,7 @@ class AdminUserCrudTest extends TestCase
             'email' => 'after@garage.test',
             'is_active' => false,
         ]);
-        $this->assertTrue($target->fresh()->hasRole('mechanic'));
+        $this->assertTrue($target->fresh()->hasRole('technician'));
     }
 
     public function test_admin_can_delete_another_user_but_not_self(): void
@@ -197,7 +197,7 @@ class AdminUserCrudTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $technician = User::factory()->create();
-        $technician->assignRole('mechanic');
+        $technician->assignRole('technician');
 
         $response = $this->actingAs($technician)->post(route('admin.users.store'), [
             'name' => 'Nope',
@@ -221,7 +221,7 @@ class AdminUserCrudTest extends TestCase
             'name' => 'Target Technician',
             'email' => 'target-technician@garage.test',
         ]);
-        $technician->assignRole('mechanic');
+        $technician->assignRole('technician');
 
         $client = User::factory()->create([
             'name' => 'Target Client',
@@ -230,14 +230,14 @@ class AdminUserCrudTest extends TestCase
         $client->assignRole('client');
 
         $response = $this->actingAs($admin)->get(route('admin.users.index', [
-            'role' => 'mechanic',
+            'role' => 'technician',
             'search' => 'target-technician',
         ]));
 
         $response->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('admin/UserManagement')
-                ->where('filters.role', 'mechanic')
+                ->where('filters.role', 'technician')
                 ->where('filters.search', 'target-technician')
                 ->where('users.data.0.email', 'target-technician@garage.test')
                 ->missing('users.data.1')

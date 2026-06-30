@@ -63,7 +63,7 @@ class User extends Authenticatable
 
     public function assignedJobStages(): HasMany
     {
-        return $this->hasMany(JobStage::class, 'assigned_mechanic_id');
+        return $this->hasMany(JobStage::class, 'assigned_technician_id');
     }
 
     public function submittedDelayReports(): HasMany

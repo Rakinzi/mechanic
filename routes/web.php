@@ -31,8 +31,8 @@ Route::get('dashboard', function (): RedirectResponse {
         return redirect()->route('admin.dashboard');
     }
 
-    if ($user->hasRole('mechanic')) {
-        return redirect()->route('mechanic.assigned-stages.index');
+    if ($user->hasRole('technician')) {
+        return redirect()->route('technician.assigned-stages.index');
     }
 
     if ($user->hasRole('client')) {
@@ -66,7 +66,7 @@ Route::middleware(['auth', 'verified', 'active', 'role:admin'])->prefix('admin')
     Route::get('reports', [ReportController::class, 'index'])->middleware('permission:view reports')->name('reports.index');
 });
 
-Route::middleware(['auth', 'verified', 'active', 'role:mechanic', 'permission:view assigned stages'])->prefix('mechanic')->as('mechanic.')->group(function (): void {
+Route::middleware(['auth', 'verified', 'active', 'role:technician', 'permission:view assigned stages'])->prefix('technician')->as('technician.')->group(function (): void {
     Route::get('assigned-stages', [AssignedStageController::class, 'index'])->name('assigned-stages.index');
     Route::get('assigned-stages/{jobStage}', [AssignedStageController::class, 'show'])->name('assigned-stages.show');
 

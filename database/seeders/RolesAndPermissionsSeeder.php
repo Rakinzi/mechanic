@@ -34,11 +34,11 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         $admin = Role::query()->firstOrCreate(['name' => 'admin']);
-        $mechanic = Role::query()->firstOrCreate(['name' => 'mechanic']);
+        $technician = Role::query()->firstOrCreate(['name' => 'technician']);
         $client = Role::query()->firstOrCreate(['name' => 'client']);
 
         $admin->syncPermissions($permissions);
-        $mechanic->syncPermissions(['view assigned stages', 'run stage actions', 'submit delay reports']);
+        $technician->syncPermissions(['view assigned stages', 'run stage actions', 'submit delay reports']);
         $client->syncPermissions(['view own repairs']);
     }
 }

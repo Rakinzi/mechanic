@@ -14,7 +14,7 @@ class AssignedStageController extends Controller
         return Inertia::render('technician/AssignedStages', [
             'stages' => JobStage::query()
                 ->with(['jobCard.vehicle.client', 'stage', 'delayReports'])
-                ->assignedToMechanic(request()->user())
+                ->assignedToTechnician(request()->user())
                 ->orderByRaw('CASE WHEN due_at IS NULL THEN 1 ELSE 0 END')
                 ->orderBy('due_at')
                 ->get(),

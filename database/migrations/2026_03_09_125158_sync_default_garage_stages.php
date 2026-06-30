@@ -9,7 +9,7 @@ return new class extends Migration
     {
         $stages = [
             ['sequence' => 1, 'name' => 'Panel Beating', 'sla_value' => 12, 'sla_unit' => 'hours'],
-            ['sequence' => 2, 'name' => 'Mechanics', 'sla_value' => 8, 'sla_unit' => 'hours'],
+            ['sequence' => 2, 'name' => 'Technicians', 'sla_value' => 8, 'sla_unit' => 'hours'],
             ['sequence' => 3, 'name' => 'Spraypainting', 'sla_value' => 10, 'sla_unit' => 'hours'],
             ['sequence' => 4, 'name' => 'Buffing', 'sla_value' => 4, 'sla_unit' => 'hours'],
             ['sequence' => 5, 'name' => 'Carwash', 'sla_value' => 2, 'sla_unit' => 'hours'],

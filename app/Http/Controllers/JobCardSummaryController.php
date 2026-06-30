@@ -29,14 +29,18 @@ class JobCardSummaryController extends Controller
         $jobCard->load([
             'vehicle.client',
             'creator',
-            'jobStages.stage',
-            'jobStages.assignedMechanic',
-            'jobStages.mechanics',
-            'jobStages.logs.actor',
-            'jobStages.delayReports.submitter',
-            'jobStages.delayReports.reviewer',
-            'jobStages.delayReports.media',
-            'jobStages.media',
+            'jobStages' => fn ($query) => $query
+                ->orderBy('sequence')
+                ->with([
+                    'stage',
+                    'assignedTechnician',
+                    'technicians',
+                    'logs.actor',
+                    'delayReports.submitter',
+                    'delayReports.reviewer',
+                    'delayReports.media',
+                    'media',
+                ]),
         ]);
 
         if ($request->boolean('download')) {

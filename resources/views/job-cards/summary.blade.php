@@ -330,8 +330,8 @@
                 <td style="font-weight:600;">{{ $jobStage->stage->name }}</td>
                 <td><span class="pill {{ $pillClass }}">{{ str_replace('_', ' ', $statusVal) }}</span></td>
                 <td>
-                    @if($jobStage->mechanics->isNotEmpty())
-                        {{ $jobStage->mechanics->pluck('name')->join(', ') }}
+                    @if($jobStage->technicians->isNotEmpty())
+                        {{ $jobStage->technicians->pluck('name')->join(', ') }}
                     @else
                         <span style="color:#94a3b8;">Unassigned</span>
                     @endif

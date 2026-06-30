@@ -25,9 +25,9 @@ class UserSeeder extends Seeder
         $admin->assignRole('admin');
 
         collect([
-            ['name' => 'Technician One', 'email' => 'mechanic1@garage.test'],
-            ['name' => 'Technician Two', 'email' => 'mechanic2@garage.test'],
-            ['name' => 'Technician Three', 'email' => 'mechanic3@garage.test'],
+            ['name' => 'Technician One', 'email' => 'technician1@garage.test'],
+            ['name' => 'Technician Two', 'email' => 'technician2@garage.test'],
+            ['name' => 'Technician Three', 'email' => 'technician3@garage.test'],
         ])->each(function (array $technicianData): void {
             $technician = User::query()->updateOrCreate(
                 ['email' => $technicianData['email']],
@@ -39,7 +39,7 @@ class UserSeeder extends Seeder
                 ]
             );
 
-            $technician->assignRole('mechanic');
+            $technician->assignRole('technician');
         });
 
         collect([

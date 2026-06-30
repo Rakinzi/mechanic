@@ -5,7 +5,7 @@
     import Upload from 'lucide-svelte/icons/upload';
     import X from 'lucide-svelte/icons/x';
     import InputError from '@/components/InputError.svelte';
-    import { store as storeDelayReport } from '@/routes/mechanic/delay-reports';
+    import { store as storeDelayReport } from '@/routes/technician/delay-reports';
 
     let {
         jobStageId,

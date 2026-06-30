@@ -71,8 +71,8 @@
                         planned_due_at: stage.planned_due_at,
                         planned_duration_value: stage.planned_duration_value,
                         planned_duration_unit: stage.planned_duration_unit,
-                        assigned_mechanic: stage.assigned_mechanic,
-                        mechanics: stage.mechanics ?? [],
+                        assigned_technician: stage.assigned_technician,
+                        technicians: stage.technicians ?? [],
                     }))}
                 />
             </div>
@@ -88,11 +88,11 @@
                         </div>
                         <label class="space-y-1 text-sm">
                             <span>{stage.stage_id === release_stage_id ? 'Admin' : 'Technicians'}</span>
-                            <select name="mechanic_ids[]" multiple class="w-full rounded-md border px-3 py-2 min-h-[80px]">
+                            <select name="technician_ids[]" multiple class="w-full rounded-md border px-3 py-2 min-h-[80px]">
                                 {#each (stage.stage_id === release_stage_id ? admins : technicians) as person (person.id)}
                                     <option
                                         value={person.id}
-                                        selected={(stage.mechanics ?? []).some((m: any) => m.id === person.id)}
+                                        selected={(stage.technicians ?? []).some((m: any) => m.id === person.id)}
                                     >{person.name}</option>
                                 {/each}
                             </select>

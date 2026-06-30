@@ -32,7 +32,7 @@ class AdminDashboardTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $technician = User::factory()->create();
-        $technician->assignRole('mechanic');
+        $technician->assignRole('technician');
 
         $response = $this->actingAs($technician)->get(route('admin.dashboard'));
 

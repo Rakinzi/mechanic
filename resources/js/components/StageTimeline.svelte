@@ -10,8 +10,8 @@
         planned_due_at?: string | null;
         planned_duration_value?: number | null;
         planned_duration_unit?: string | null;
-        assigned_mechanic?: { name: string } | null;
-        mechanics?: Array<{ id: number; name: string }>;
+        assigned_technician?: { name: string } | null;
+        technicians?: Array<{ id: number; name: string }>;
     };
 
     let { stages }: { stages: StageItem[] } = $props();
@@ -43,10 +43,10 @@
                     <StatusBadge status={stage.status} />
                 </div>
                 <div class="mt-1 space-y-0.5 text-xs text-muted-foreground">
-                    {#if (stage.mechanics ?? []).length > 0}
-                        <p>Technicians: {(stage.mechanics ?? []).map((m) => m.name).join(', ')}</p>
-                    {:else if stage.assigned_mechanic}
-                        <p>Technician: {stage.assigned_mechanic.name}</p>
+                    {#if (stage.technicians ?? []).length > 0}
+                        <p>Technicians: {(stage.technicians ?? []).map((m) => m.name).join(', ')}</p>
+                    {:else if stage.assigned_technician}
+                        <p>Technician: {stage.assigned_technician.name}</p>
                     {:else}
                         <p>Technicians: Unassigned</p>
                     {/if}

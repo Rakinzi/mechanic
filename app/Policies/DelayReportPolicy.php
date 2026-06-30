@@ -14,7 +14,7 @@ class DelayReportPolicy
             return true;
         }
 
-        if ($user->hasRole('mechanic')) {
+        if ($user->hasRole('technician')) {
             return $delayReport->submitted_by === $user->id;
         }
 
@@ -23,7 +23,7 @@ class DelayReportPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole('mechanic');
+        return $user->hasRole('technician');
     }
 
     public function review(User $user, DelayReport $delayReport): bool

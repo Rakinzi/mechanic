@@ -28,7 +28,7 @@ class DashboardController extends Controller
                     ->count(),
             ],
             'overdueStages' => JobStage::query()
-                ->with(['jobCard.vehicle.client', 'stage', 'assignedMechanic'])
+                ->with(['jobCard.vehicle.client', 'stage', 'assignedTechnician'])
                 ->where('status', StageStatus::Overdue->value)
                 ->orderBy('due_at')
                 ->get(),

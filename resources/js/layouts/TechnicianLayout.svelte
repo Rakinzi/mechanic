@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Snippet } from 'svelte';
     import AppLayout from '@/layouts/AppLayout.svelte';
-    import { index as assignedStages } from '@/routes/mechanic/assigned-stages';
+    import { index as assignedStages } from '@/routes/technician/assigned-stages';
     import type { BreadcrumbItem } from '@/types';
 
     let {
