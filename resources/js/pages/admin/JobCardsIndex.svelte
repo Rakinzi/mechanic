@@ -215,18 +215,30 @@
                         <input type="datetime-local" name="promised_delivery_at" class="w-full rounded-md border px-3 py-2" />
                     </label>
 
-                    <div class="space-y-3 md:col-span-2">
-                        <p class="text-sm font-medium">Repair route</p>
+                    <div class="space-y-2 md:col-span-2">
+                        <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Repair route — set order per job</p>
+                        <p class="text-xs text-muted-foreground">Tick the stages needed and set the sequence number to control the order for this job specifically.</p>
                         {#each stages as stage, index (stage.id)}
-                            <div class="grid gap-3 rounded-lg border p-3 md:grid-cols-[minmax(0,1fr)_220px_140px_120px]">
+                            <div class="grid gap-3 rounded-xl border bg-muted/30 p-3 md:grid-cols-[40px_minmax(0,1fr)_220px_120px_100px]">
                                 <input type="hidden" name={`selected_stages[${index}][stage_id]`} value={stage.id} />
+                                <!-- Per-job sequence -->
+                                <label class="space-y-1 text-sm">
+                                    <span class="text-xs text-muted-foreground">#</span>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        name={`selected_stages[${index}][sequence]`}
+                                        class="w-full rounded-md border bg-background px-2 py-2 text-center text-sm"
+                                        value={stage.sequence}
+                                    />
+                                </label>
                                 <label class="flex items-center gap-2 text-sm">
                                     <input type="checkbox" name={`selected_stages[${index}][enabled]`} value="1" />
-                                    <span>{stage.name}</span>
+                                    <span class="font-medium">{stage.name}</span>
                                 </label>
                                 <label class="space-y-1 text-sm">
-                                    <span>Technicians &amp; Admins</span>
-                                    <select name={`selected_stages[${index}][technician_ids][]`} multiple class="w-full rounded-md border px-3 py-2 min-h-[80px]">
+                                    <span class="text-xs text-muted-foreground">Assigned to</span>
+                                    <select name={`selected_stages[${index}][technician_ids][]`} multiple class="w-full rounded-md border bg-background px-3 py-2 min-h-[72px]">
                                         {#if technicians.length > 0}
                                             <optgroup label="Technicians">
                                                 {#each technicians as person (person.id)}
@@ -242,21 +254,21 @@
                                             </optgroup>
                                         {/if}
                                     </select>
-                                    <span class="text-xs text-muted-foreground">Hold Ctrl/Cmd to select multiple</span>
+                                    <span class="text-xs text-muted-foreground">Hold Ctrl/Cmd for multiple</span>
                                 </label>
                                 <label class="space-y-1 text-sm">
-                                    <span>Duration</span>
+                                    <span class="text-xs text-muted-foreground">Duration</span>
                                     <input
                                         type="number"
                                         min="1"
                                         name={`selected_stages[${index}][planned_duration_value]`}
-                                        class="w-full rounded-md border px-3 py-2"
+                                        class="w-full rounded-md border bg-background px-3 py-2"
                                         value={stage.sla_value}
                                     />
                                 </label>
                                 <label class="space-y-1 text-sm">
-                                    <span>Unit</span>
-                                    <select name={`selected_stages[${index}][planned_duration_unit]`} class="w-full rounded-md border px-3 py-2">
+                                    <span class="text-xs text-muted-foreground">Unit</span>
+                                    <select name={`selected_stages[${index}][planned_duration_unit]`} class="w-full rounded-md border bg-background px-3 py-2">
                                         <option value="hours" selected={stage.sla_unit === 'hours'}>Hours</option>
                                         <option value="days" selected={stage.sla_unit === 'days'}>Days</option>
                                     </select>

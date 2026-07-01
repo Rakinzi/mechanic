@@ -63,11 +63,15 @@ class JobCardService
 
                     $primaryTechnicianId = $technicianIds[0] ?? null;
 
+                    $sequence = filled($selectedStage['sequence'] ?? null)
+                        ? (int) $selectedStage['sequence']
+                        : $index + 1;
+
                     /** @var JobStage $jobStage */
                     $jobStage = $jobCard->jobStages()->create([
                         'stage_id' => $stage->id,
                         'assigned_technician_id' => $primaryTechnicianId,
-                        'sequence' => $index + 1,
+                        'sequence' => $sequence,
                         'planned_duration_value' => $selectedStage['planned_duration_value'],
                         'planned_duration_unit' => $selectedStage['planned_duration_unit'],
                         'status' => StageStatus::NotStarted,

@@ -361,7 +361,7 @@ class JobCardIntakePlanningTest extends TestCase
         $this->assertSame($admin->id, $jobCard->jobStages->first()->assigned_technician_id);
     }
 
-    public function test_admin_cannot_be_assigned_to_non_release_stage(): void
+    public function test_admin_can_be_assigned_to_any_stage(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -387,6 +387,8 @@ class JobCardIntakePlanningTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrors('selected_stages.0.technician_ids.0');
+        $response->assertRedirect();
+        $jobCard = JobCard::query()->with('jobStages')->latest('id')->firstOrFail();
+        $this->assertSame($admin->id, $jobCard->jobStages->first()->assigned_technician_id);
     }
 }
