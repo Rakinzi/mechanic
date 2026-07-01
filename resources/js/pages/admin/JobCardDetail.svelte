@@ -98,9 +98,12 @@
                 {#each jobCard.job_stages.filter((stage: any) => stage.status === 'NOT_STARTED') as stage (stage.id)}
                     <Form action={`/admin/job-cards/${jobCard.uuid}/stages/${stage.uuid}`} method="post" class="grid gap-3 rounded-xl border bg-card p-4 shadow-sm md:grid-cols-4">
                         <input type="hidden" name="_method" value="PATCH" />
-                        <div>
+                        <div class="space-y-2">
                             <p class="text-sm font-medium">{stage.stage.name}</p>
-                            <p class="text-xs text-muted-foreground">Sequence {stage.sequence}</p>
+                            <label class="space-y-1 text-sm">
+                                <span class="text-xs text-muted-foreground">Sequence</span>
+                                <input type="number" min="1" name="sequence" class="w-full rounded-md border px-3 py-2" value={stage.sequence} />
+                            </label>
                         </div>
                         <label class="space-y-1 text-sm">
                             <span>Technicians &amp; Admins</span>

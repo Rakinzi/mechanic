@@ -125,7 +125,7 @@ class JobCardService
         $primaryTechnicianId = $technicianIds[0] ?? null;
 
         DB::transaction(function () use ($jobStage, $payload, $technicianIds, $primaryTechnicianId): void {
-            $jobStage->forceFill([
+            $updates = [
                 'assigned_technician_id' => $primaryTechnicianId,
                 'planned_duration_value' => Arr::get($payload, 'planned_duration_value'),
                 'planned_duration_unit' => Arr::get($payload, 'planned_duration_unit'),
@@ -136,7 +136,13 @@ class JobCardService
                 ),
                 'latest_note' => Arr::get($payload, 'latest_note'),
                 'last_status_changed_at' => now(),
-            ])->save();
+            ];
+
+            if (filled(Arr::get($payload, 'sequence'))) {
+                $updates['sequence'] = (int) Arr::get($payload, 'sequence');
+            }
+
+            $jobStage->forceFill($updates)->save();
 
             $jobStage->technicians()->sync($technicianIds);
         });

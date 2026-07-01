@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Stage;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -17,6 +16,7 @@ class UpdateJobStagePlanRequest extends FormRequest
                 ->values()
                 ->all(),
             'planned_duration_value' => $this->filled('planned_duration_value') ? (int) $this->input('planned_duration_value') : null,
+            'sequence' => $this->filled('sequence') ? (int) $this->input('sequence') : null,
         ]);
     }
 
@@ -28,10 +28,6 @@ class UpdateJobStagePlanRequest extends FormRequest
     public function withValidator(\Illuminate\Validation\Validator $validator): void
     {
         $validator->after(function (\Illuminate\Validation\Validator $validator): void {
-            $jobStage = $this->route('jobStage');
-            $releaseStageId = Stage::query()->where('name', 'Release')->value('id');
-            $isReleaseStage = $jobStage && (int) $jobStage->stage_id === (int) $releaseStageId;
-
             foreach ((array) $this->input('technician_ids', []) as $index => $userId) {
                 $user = User::query()->find((int) $userId);
 
@@ -39,16 +35,10 @@ class UpdateJobStagePlanRequest extends FormRequest
                     continue;
                 }
 
-                $allowed = $isReleaseStage
-                    ? $user->hasAnyRole(['technician', 'admin'])
-                    : $user->hasRole('technician');
-
-                if (! $allowed) {
+                if (! $user->hasAnyRole(['technician', 'admin'])) {
                     $validator->errors()->add(
                         "technician_ids.{$index}",
-                        $isReleaseStage
-                            ? 'The selected user must be a technician or admin.'
-                            : 'The selected user must be a technician.',
+                        'The selected user must be a technician or admin.',
                     );
                 }
             }
@@ -61,6 +51,7 @@ class UpdateJobStagePlanRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'sequence' => ['nullable', 'integer', 'min:1'],
             'technician_ids' => ['nullable', 'array'],
             'technician_ids.*' => ['integer', 'exists:users,id'],
             'planned_duration_value' => ['required', 'integer', 'min:1', 'max:365'],
