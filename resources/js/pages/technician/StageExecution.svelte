@@ -60,7 +60,7 @@
 
 <TechnicianLayout {breadcrumbs}>
     <!-- Stage header card -->
-    <div class="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
+    <div class="rounded-xl border bg-card p-5 shadow-sm">
         <div class="flex items-start justify-between gap-3">
             <div>
                 <h2 class="text-xl font-bold">{jobStage.stage.name}</h2>
@@ -159,18 +159,44 @@
     </div>
 
     <!-- Stage media -->
-    <div class="mt-5 rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
-        <h3 class="mb-3 text-base font-semibold">Stage photos</h3>
+    <div class="mt-5 rounded-xl border bg-card p-5 shadow-sm">
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Stage photos</h3>
         {#if (jobStage.media ?? []).length > 0}
             <PhotoGallery media={jobStage.media ?? []} />
         {:else}
-            <p class="text-sm text-muted-foreground">No photos uploaded yet.</p>
+            <p class="mb-4 text-sm text-muted-foreground">No photos uploaded yet.</p>
         {/if}
+        <Form
+            action={`/technician/job-stages/${jobStage.uuid}/media`}
+            method="post"
+            enctype="multipart/form-data"
+            class="mt-4 border-t pt-4"
+            let:processing
+            let:errors
+        >
+            <label class="block space-y-1.5">
+                <span class="text-sm font-medium">Upload photos</span>
+                <input
+                    type="file"
+                    name="photos[]"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,image/heic"
+                    class="block w-full rounded-md border bg-background px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-sm file:font-medium file:text-primary-foreground"
+                />
+                <p class="text-xs text-muted-foreground">Up to 10 photos &bull; JPG, PNG, WebP, HEIC &bull; Max 10 MB each</p>
+            </label>
+            {#if errors.photos}
+                <p class="mt-1 text-xs text-red-600">{errors.photos}</p>
+            {/if}
+            <button type="submit" disabled={processing} class="btn preset-filled mt-3 text-sm">
+                {processing ? 'Uploading…' : 'Upload photos'}
+            </button>
+        </Form>
     </div>
 
     <!-- Logs -->
     {#if (jobStage.logs ?? []).length > 0}
-        <div class="mt-5 rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
+        <div class="mt-5 rounded-xl border bg-card p-5 shadow-sm">
             <h3 class="mb-3 text-base font-semibold">Activity log</h3>
             <Accordion multiple>
                 {#each jobStage.logs as log (log.id)}

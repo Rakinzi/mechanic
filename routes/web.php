@@ -12,6 +12,7 @@ use App\Http\Controllers\JobCardSummaryController;
 use App\Http\Controllers\Technician\AssignedStageController;
 use App\Http\Controllers\Technician\DelayReportController;
 use App\Http\Controllers\Technician\StageActionController;
+use App\Http\Controllers\Technician\StageMediaController;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
@@ -76,6 +77,7 @@ Route::middleware(['auth', 'verified', 'active', 'role:technician', 'permission:
     Route::post('job-stages/{jobStage}/complete', [StageActionController::class, 'complete'])->middleware('permission:run stage actions')->name('job-stages.complete');
 
     Route::post('job-stages/{jobStage}/delay-reports', [DelayReportController::class, 'store'])->middleware('permission:submit delay reports')->name('delay-reports.store');
+    Route::post('job-stages/{jobStage}/media', [StageMediaController::class, 'store'])->name('job-stages.media.store');
 });
 
 Route::middleware(['auth', 'verified', 'active', 'role:client', 'permission:view own repairs'])->prefix('client')->as('client.')->group(function (): void {
