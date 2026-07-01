@@ -9,7 +9,7 @@
         children?: Snippet;
     } = $props();
 
-    const appName = import.meta.env.VITE_APP_NAME || 'Technician';
+    const appName = import.meta.env.VITE_APP_NAME || 'Motor Techs';
     const fullTitle = $derived(title ? `${title} - ${appName}` : appName);
 </script>
 

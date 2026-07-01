@@ -12,13 +12,11 @@
         jobCard,
         technicians,
         admins,
-        release_stage_id,
         summaryUrl,
     }: {
         jobCard: any;
         technicians: Array<{ id: number; name: string }>;
         admins: Array<{ id: number; name: string }>;
-        release_stage_id: number | null;
         summaryUrl: string;
     } = $props();
 
@@ -87,14 +85,28 @@
                             <p class="text-xs text-muted-foreground">Sequence {stage.sequence}</p>
                         </div>
                         <label class="space-y-1 text-sm">
-                            <span>{stage.stage_id === release_stage_id ? 'Admin' : 'Technicians'}</span>
+                            <span>Technicians &amp; Admins</span>
                             <select name="technician_ids[]" multiple class="w-full rounded-md border px-3 py-2 min-h-[80px]">
-                                {#each (stage.stage_id === release_stage_id ? admins : technicians) as person (person.id)}
-                                    <option
-                                        value={person.id}
-                                        selected={(stage.technicians ?? []).some((m: any) => m.id === person.id)}
-                                    >{person.name}</option>
-                                {/each}
+                                {#if technicians.length > 0}
+                                    <optgroup label="Technicians">
+                                        {#each technicians as person (person.id)}
+                                            <option
+                                                value={person.id}
+                                                selected={(stage.technicians ?? []).some((m: any) => m.id === person.id)}
+                                            >{person.name}</option>
+                                        {/each}
+                                    </optgroup>
+                                {/if}
+                                {#if admins.length > 0}
+                                    <optgroup label="Admins">
+                                        {#each admins as person (person.id)}
+                                            <option
+                                                value={person.id}
+                                                selected={(stage.technicians ?? []).some((m: any) => m.id === person.id)}
+                                            >{person.name}</option>
+                                        {/each}
+                                    </optgroup>
+                                {/if}
                             </select>
                             <span class="text-xs text-muted-foreground">Hold Ctrl/Cmd to select multiple</span>
                         </label>

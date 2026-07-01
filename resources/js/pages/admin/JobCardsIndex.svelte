@@ -17,7 +17,6 @@
         stages,
         technicians,
         admins,
-        release_stage_id,
         filters,
     }: {
         jobCards: { data: Array<Record<string, string | number | null>> };
@@ -26,7 +25,6 @@
         stages: Array<{ id: number; name: string; sla_value: number; sla_unit: string }>;
         technicians: Array<{ id: number; name: string }>;
         admins: Array<{ id: number; name: string }>;
-        release_stage_id: number | null;
         filters: {
             status?: string | null;
             client_id?: number | null;
@@ -227,11 +225,22 @@
                                     <span>{stage.name}</span>
                                 </label>
                                 <label class="space-y-1 text-sm">
-                                    <span>{stage.id === release_stage_id ? 'Admin' : 'Technicians'}</span>
+                                    <span>Technicians &amp; Admins</span>
                                     <select name={`selected_stages[${index}][technician_ids][]`} multiple class="w-full rounded-md border px-3 py-2 min-h-[80px]">
-                                        {#each (stage.id === release_stage_id ? admins : technicians) as person (person.id)}
-                                            <option value={person.id}>{person.name}</option>
-                                        {/each}
+                                        {#if technicians.length > 0}
+                                            <optgroup label="Technicians">
+                                                {#each technicians as person (person.id)}
+                                                    <option value={person.id}>{person.name}</option>
+                                                {/each}
+                                            </optgroup>
+                                        {/if}
+                                        {#if admins.length > 0}
+                                            <optgroup label="Admins">
+                                                {#each admins as person (person.id)}
+                                                    <option value={person.id}>{person.name}</option>
+                                                {/each}
+                                            </optgroup>
+                                        {/if}
                                     </select>
                                     <span class="text-xs text-muted-foreground">Hold Ctrl/Cmd to select multiple</span>
                                 </label>

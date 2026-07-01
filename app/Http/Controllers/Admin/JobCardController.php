@@ -69,6 +69,7 @@ class JobCardController extends Controller
             'vehicles' => Vehicle::query()->orderBy('registration_number')->get(['id', 'client_id', 'registration_number', 'make', 'model']),
             'stages' => Stage::query()->orderBy('sequence')->get(['id', 'name', 'sequence', 'sla_value', 'sla_unit']),
             'technicians' => User::query()->role('technician')->orderBy('name')->get(['id', 'name', 'email']),
+            'admins' => User::query()->role('admin')->orderBy('name')->get(['id', 'name', 'email']),
             'filters' => [
                 'status' => $status,
                 'client_id' => $clientId,
@@ -98,6 +99,7 @@ class JobCardController extends Controller
                 'jobStages.delayReports.media',
             ]),
             'technicians' => User::query()->role('technician')->orderBy('name')->get(['id', 'name', 'email']),
+            'admins' => User::query()->role('admin')->orderBy('name')->get(['id', 'name', 'email']),
             'summaryUrl' => route('admin.job-cards.summary', $jobCard),
         ]);
     }
