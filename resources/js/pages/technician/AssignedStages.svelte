@@ -67,72 +67,65 @@
 
 <TechnicianLayout {breadcrumbs}>
     {#if stages.length === 0}
-        <div class="rounded-xl border bg-white p-8 text-center shadow-sm dark:bg-slate-900">
-            <ClipboardList class="mx-auto size-8 text-muted-foreground" />
-            <p class="mt-2 font-medium">No stages assigned</p>
-            <p class="text-sm text-muted-foreground">Check back later for new work.</p>
+        <div class="rounded-xl border border-dashed px-4 py-16 text-center">
+            <ClipboardList class="mx-auto size-10 text-muted-foreground/40" />
+            <p class="mt-3 font-semibold">No stages assigned</p>
+            <p class="mt-1 text-sm text-muted-foreground">Check back later for new work.</p>
         </div>
     {:else}
-        <!-- Active stages -->
         {#if activeStages.length > 0}
-            <div class="space-y-3">
+            <div class="space-y-2">
                 {#each activeStages as stage (stage.id)}
                     <a
                         href={show({ jobStage: stage.uuid }).url}
-                        class="block rounded-xl border bg-white p-4 shadow-sm transition hover:shadow-md dark:bg-slate-900
-                            {isOverdue(stage) ? 'border-red-300 dark:border-red-700' : ''}
-                            {stage.status === 'BLOCKED' ? 'border-amber-300 dark:border-amber-700' : ''}"
+                        class="group flex items-center gap-4 rounded-xl border bg-card px-4 py-4 shadow-sm transition hover:shadow-md
+                            {isOverdue(stage) ? 'border-l-4 border-l-red-500' : stage.status === 'BLOCKED' ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-transparent hover:border-l-primary'}"
                     >
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="truncate font-semibold">{stage.stage.name}</p>
-                                <p class="mt-0.5 text-sm text-muted-foreground">
-                                    Job <span class="font-medium text-foreground">#{stage.job_card.job_number}</span>
-                                    {#if stage.job_card?.vehicle}
-                                        &mdash; {stage.job_card.vehicle.make} {stage.job_card.vehicle.model}
-                                    {/if}
-                                </p>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="font-bold">{stage.stage.name}</p>
+                                <StatusBadge status={stage.status} />
                             </div>
-                            <StatusBadge status={stage.status} />
-                        </div>
-
-                        <div class="mt-3 flex items-center gap-4 text-xs">
-                            <span class="flex items-center gap-1 {isOverdue(stage) ? 'font-semibold text-red-600 dark:text-red-400' : 'text-muted-foreground'}">
-                                {#if isOverdue(stage)}
-                                    <CircleAlert class="size-3.5" />
-                                {:else}
-                                    <Clock3 class="size-3.5" />
+                            <p class="mt-0.5 text-sm text-muted-foreground">
+                                Job <span class="font-medium text-foreground">#{stage.job_card.job_number}</span>
+                                {#if stage.job_card?.vehicle}
+                                    &nbsp;&mdash; {stage.job_card.vehicle.make} {stage.job_card.vehicle.model}
                                 {/if}
-                                {dueLabel(stage)}
-                            </span>
-                            {#if isUrgent(stage)}
-                                <span class="rounded-full px-2 py-0.5 text-xs font-medium
-                                    {isOverdue(stage) ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'}">
-                                    {isOverdue(stage) ? 'Needs delay report' : 'Blocked — report required'}
+                            </p>
+                            <div class="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                                <span class="flex items-center gap-1 {isOverdue(stage) ? 'font-semibold text-red-600 dark:text-red-400' : 'text-muted-foreground'}">
+                                    {#if isOverdue(stage)}
+                                        <CircleAlert class="size-3.5" />
+                                    {:else}
+                                        <Clock3 class="size-3.5" />
+                                    {/if}
+                                    {dueLabel(stage)}
                                 </span>
-                            {/if}
-                            <span class="ml-auto flex items-center gap-1 font-medium text-primary">
-                                <span>Open</span>
-                                <ChevronRight class="size-3.5" />
-                            </span>
+                                {#if isUrgent(stage)}
+                                    <span class="rounded-full px-2 py-0.5 font-medium
+                                        {isOverdue(stage) ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'}">
+                                        {isOverdue(stage) ? 'Needs delay report' : 'Blocked — report required'}
+                                    </span>
+                                {/if}
+                            </div>
                         </div>
+                        <ChevronRight class="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
                     </a>
                 {/each}
             </div>
         {/if}
 
-        <!-- Completed stages (collapsed) -->
         {#if completedStages.length > 0}
             <details class="mt-6 group">
-                <summary class="flex cursor-pointer items-center gap-2 text-sm font-medium text-muted-foreground list-none">
-                    <ChevronRight class="size-4 transition group-open:rotate-90" />
+                <summary class="flex cursor-pointer list-none items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    <ChevronRight class="size-3.5 transition group-open:rotate-90" />
                     Completed ({completedStages.length})
                 </summary>
-                <div class="mt-3 space-y-2">
+                <div class="mt-3 space-y-1.5">
                     {#each completedStages as stage (stage.id)}
                         <a
                             href={show({ jobStage: stage.uuid }).url}
-                            class="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3 text-sm hover:bg-muted/50"
+                            class="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-2.5 text-sm hover:bg-muted/50"
                         >
                             <span class="text-muted-foreground">
                                 {stage.stage.name} &mdash; #{stage.job_card.job_number}

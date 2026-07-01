@@ -50,8 +50,8 @@
 
 <AdminLayout {breadcrumbs}>
     <!-- Filters -->
-    <div class="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
-        <h2 class="mb-3 text-base font-semibold">Filters</h2>
+    <div class="rounded-xl border bg-card p-5 shadow-sm">
+        <h2 class="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Filters</h2>
         <form method="GET" action={index().url} class="grid gap-3 md:grid-cols-4">
             <label class="space-y-1 text-sm">
                 <span class="font-medium">Status</span>
@@ -114,8 +114,8 @@
 
         <!-- Create form (collapsible) -->
         {#if showCreateForm}
-            <div class="mb-5 rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
-                <h3 class="mb-4 text-base font-semibold">Create job card</h3>
+            <div class="mb-5 rounded-xl border bg-card p-5 shadow-sm">
+                <h3 class="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">New job card</h3>
                 <Form {...store.form()} class="grid gap-3 md:grid-cols-2">
                     <label class="space-y-1 text-sm">
                         <span class="font-medium">Client</span>
@@ -270,58 +270,50 @@
         {/if}
 
         {#if jobCards.data.length === 0}
-            <div class="rounded-xl border bg-white p-8 text-center shadow-sm dark:bg-slate-900">
-                <p class="text-muted-foreground">No job cards match the current filters.</p>
+            <div class="rounded-xl border border-dashed px-4 py-12 text-center">
+                <p class="text-sm text-muted-foreground">No job cards match the current filters.</p>
             </div>
         {:else}
-            <div class="space-y-3">
+            <div class="space-y-2">
                 {#each jobCards.data as jobCard (jobCard.id)}
                     <a
                         href={show({ jobCard: String(jobCard.uuid) }).url}
-                        class="block rounded-xl border bg-white p-4 shadow-sm transition hover:shadow-md dark:bg-slate-900
-                            {jobCard.status === 'OVERDUE' ? 'border-red-300 dark:border-red-700' : ''}"
+                        class="group flex items-center gap-4 rounded-xl border bg-card px-4 py-3.5 shadow-sm transition hover:shadow-md
+                            {jobCard.status === 'OVERDUE' ? 'border-l-4 border-l-red-500' : 'border-l-4 border-l-transparent hover:border-l-primary'}"
                     >
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="font-semibold">{jobCard.job_number}</p>
-                                <p class="mt-0.5 truncate text-sm text-muted-foreground">
-                                    {jobCard.client_name} — {jobCard.vehicle}
-                                </p>
-                            </div>
-                            <StatusBadge status={String(jobCard.status)} />
-                        </div>
-                        <div class="mt-2 flex items-center justify-between gap-4 text-xs text-muted-foreground">
-                            <div class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                                <span>
-                                    Stage: <span class="font-medium text-foreground">{jobCard.current_stage ?? 'All complete'}</span>
-                                </span>
-                                {#if jobCard.current_stage_status && jobCard.current_stage_status !== 'NOT_STARTED'}
-                                    <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold
-                                        {jobCard.current_stage_status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' :
-                                         jobCard.current_stage_status === 'OVERDUE'     ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' :
-                                         'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}">
-                                        {String(jobCard.current_stage_status).replace('_', ' ')}
-                                    </span>
-                                {/if}
-                                {#if jobCard.current_technicians}
-                                    <span class="flex items-center gap-1 truncate">
-                                        <User class="size-3.5 shrink-0" />
-                                        <span class="truncate">{jobCard.current_technicians}</span>
-                                    </span>
-                                {:else if jobCard.current_stage}
-                                    <span class="italic text-amber-600 dark:text-amber-400">Unassigned</span>
-                                {/if}
+                        <!-- Job number + vehicle -->
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="font-bold tracking-tight">{jobCard.job_number}</span>
+                                <StatusBadge status={String(jobCard.status)} />
                                 {#if jobCard.pending_delay_reports_count > 0}
-                                    <span class="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
-                                        {jobCard.pending_delay_reports_count} delay report{Number(jobCard.pending_delay_reports_count) !== 1 ? 's' : ''}
+                                    <span class="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                                        {jobCard.pending_delay_reports_count} delay{Number(jobCard.pending_delay_reports_count) !== 1 ? 's' : ''}
                                     </span>
                                 {/if}
                             </div>
-                            <span class="shrink-0 flex items-center gap-1 font-medium text-primary">
-                                <span>Open</span>
-                                <ChevronRight class="size-3.5" />
-                            </span>
+                            <p class="mt-0.5 truncate text-sm text-muted-foreground">
+                                {jobCard.client_name} &mdash; <span class="font-medium text-foreground">{jobCard.vehicle}</span>
+                                {#if jobCard.registration_number}
+                                    &nbsp;<span class="rounded border border-slate-400 bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold tracking-widest text-slate-800 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">{jobCard.registration_number}</span>
+                                {/if}
+                            </p>
                         </div>
+
+                        <!-- Stage info -->
+                        <div class="hidden shrink-0 text-right sm:block">
+                            <p class="text-xs font-semibold text-foreground">{jobCard.current_stage ?? 'Complete'}</p>
+                            {#if jobCard.current_technicians}
+                                <p class="mt-0.5 flex items-center justify-end gap-1 text-xs text-muted-foreground">
+                                    <User class="size-3" />
+                                    {jobCard.current_technicians}
+                                </p>
+                            {:else if jobCard.current_stage}
+                                <p class="mt-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">Unassigned</p>
+                            {/if}
+                        </div>
+
+                        <ChevronRight class="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
                     </a>
                 {/each}
             </div>

@@ -35,9 +35,8 @@
 <AppHead title="Reports" />
 
 <AdminLayout {breadcrumbs}>
-    <!-- Summary KPIs -->
-    <div class="grid gap-4 md:grid-cols-5">
-        <StageCard title="Total Job Cards" status="OPEN" description={`${summary.totalJobCards}`} />
+    <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <StageCard title="Total Jobs" status="OPEN" description={`${summary.totalJobCards}`} />
         <StageCard title="Completed" status="COMPLETED" description={`${summary.completedJobCards}`} />
         <StageCard title="Overdue Stages" status="OVERDUE" description={`${summary.overdueStages}`} />
         <StageCard title="Pending Delays" status="IN_PROGRESS" description={`${summary.pendingDelayReports}`} />
@@ -46,8 +45,8 @@
 
     <div class="mt-6 grid gap-6 md:grid-cols-2">
         <!-- Stage turnaround -->
-        <div class="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
-            <h2 class="mb-4 text-base font-semibold">Avg. turnaround by stage</h2>
+        <div class="rounded-xl border bg-card p-5 shadow-sm">
+            <h2 class="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Avg. turnaround by stage</h2>
             {#if analytics.stage_turnaround.length === 0}
                 <p class="text-sm text-muted-foreground">No data yet.</p>
             {:else}
@@ -71,8 +70,8 @@
         </div>
 
         <!-- Delays by technician -->
-        <div class="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
-            <h2 class="mb-4 text-base font-semibold">Delays by technician</h2>
+        <div class="rounded-xl border bg-card p-5 shadow-sm">
+            <h2 class="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Delays by technician</h2>
             {#if analytics.delays_by_technician.length === 0}
                 <p class="text-sm text-muted-foreground">No data yet.</p>
             {:else}
@@ -97,8 +96,8 @@
     </div>
 
     <!-- Common delay reasons -->
-    <div class="mt-6 rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
-        <h2 class="mb-4 text-base font-semibold">Most common delay reasons</h2>
+    <div class="mt-6 rounded-xl border bg-card p-5 shadow-sm">
+        <h2 class="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Most common delay reasons</h2>
         {#if analytics.common_delay_reasons.length === 0}
             <p class="text-sm text-muted-foreground">No data yet.</p>
         {:else}

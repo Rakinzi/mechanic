@@ -43,8 +43,8 @@
 <AppHead title="User Management" />
 
 <AdminLayout {breadcrumbs}>
-    <section class="space-y-3 rounded-lg border p-4">
-        <h2 class="text-lg font-semibold">Search & Filters</h2>
+    <section class="space-y-3 rounded-xl border bg-card p-5 shadow-sm">
+        <h2 class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Search & Filters</h2>
         <form method="GET" action={usersIndex().url} class="grid gap-3 md:grid-cols-4">
             <label class="space-y-1 text-sm md:col-span-2">
                 <span>Search (name/email/phone)</span>
@@ -74,8 +74,8 @@
         </form>
     </section>
 
-    <section class="space-y-3 rounded-lg border p-4">
-        <h2 class="text-lg font-semibold">Create User</h2>
+    <section class="mt-5 space-y-3 rounded-xl border bg-card p-5 shadow-sm">
+        <h2 class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Add user</h2>
         <Form action="/admin/users" method="post" class="grid gap-3 md:grid-cols-2">
             <label class="space-y-1 text-sm">
                 <span>Name</span>
@@ -112,15 +112,23 @@
     </section>
 
     <section class="mt-6 space-y-3">
-        <h2 class="text-lg font-semibold">Manage Users ({users.total})</h2>
+        <h2 class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Users ({users.total})</h2>
         <Accordion multiple>
             {#each users.data as user (user.id)}
-                <Accordion.Item value={String(user.id)} class="rounded-lg border px-3 py-2">
-                    <Accordion.ItemTrigger class="flex w-full items-center justify-between text-left">
-                        <span class="font-medium">{user.name} ({user.email})</span>
-                        <span class="text-sm text-muted-foreground">{user.roles.join(', ')}</span>
+                <Accordion.Item value={String(user.id)} class="rounded-xl border bg-card shadow-sm">
+                    <Accordion.ItemTrigger class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left">
+                        <div class="min-w-0">
+                            <p class="font-semibold">{user.name}</p>
+                            <p class="text-xs text-muted-foreground">{user.email}</p>
+                        </div>
+                        <div class="flex shrink-0 items-center gap-2">
+                            <span class="rounded-md bg-muted px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">{user.roles.join(', ')}</span>
+                            {#if !user.is_active}
+                                <span class="rounded-md bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">Inactive</span>
+                            {/if}
+                        </div>
                     </Accordion.ItemTrigger>
-                    <Accordion.ItemContent class="space-y-3 pt-3">
+                    <Accordion.ItemContent class="space-y-4 border-t px-4 pb-4 pt-4">
                         <Form action={`/admin/users/${user.id}`} method="post" class="grid gap-3 md:grid-cols-2">
                             <input type="hidden" name="_method" value="PUT" />
                             <label class="space-y-1 text-sm">

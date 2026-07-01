@@ -8,15 +8,24 @@
         status: string;
         description?: string;
     } = $props();
+
+    const borderColor = $derived.by(() => {
+        if (status === 'COMPLETED' || status === 'APPROVED') return 'border-l-green-500';
+        if (status === 'OVERDUE' || status === 'REJECTED') return 'border-l-red-500';
+        if (status === 'IN_PROGRESS') return 'border-l-blue-500';
+        if (status === 'BLOCKED') return 'border-l-amber-500';
+        if (status === 'OPEN') return 'border-l-primary';
+        return 'border-l-slate-300 dark:border-l-slate-600';
+    });
+
+    const numericValue = $derived(description && !isNaN(Number(description)) ? Number(description) : null);
 </script>
 
-<div class="card rounded-lg border bg-white p-4 shadow-sm dark:bg-slate-900">
-    <div class="mb-2 flex items-start justify-between gap-2">
-        <h3 class="text-sm font-semibold">{title}</h3>
-        <span class="badge rounded-md bg-slate-100 px-2 py-1 text-[10px] font-medium dark:bg-slate-800">{status}</span>
-    </div>
-
-    {#if description}
-        <p class="text-sm text-muted-foreground">{description}</p>
+<div class="relative flex flex-col justify-between overflow-hidden rounded-xl border border-l-4 bg-card p-5 shadow-sm {borderColor}">
+    <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{title}</p>
+    {#if numericValue !== null}
+        <p class="mt-2 text-4xl font-black tracking-tight text-foreground">{numericValue}</p>
+    {:else if description}
+        <p class="mt-2 text-sm text-muted-foreground">{description}</p>
     {/if}
 </div>
